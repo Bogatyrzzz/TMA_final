@@ -345,6 +345,15 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 
       {/* PRO Modal */}
       {showProModal && <ProModal onClose={() => setShowProModal(false)} user={user} onRefresh={onRefresh} />}
+
+      {/* Quest Confirm Modal */}
+      {confirmQuest && (
+        <QuestConfirmModal
+          quest={confirmQuest}
+          onConfirm={() => handleCompleteQuest(confirmQuest.id)}
+          onCancel={() => setConfirmQuest(null)}
+        />
+      )}
     </div>
   );
 }
@@ -398,18 +407,6 @@ function QuestCard({ quest, index, onComplete, disabled }) {
         )}
       </div>
     </motion.button>
-  );
-}
-            </div>
-            {quest.branch !== 'global' && (
-              <div className="glass rounded-full px-3 py-1">
-                <span className="text-xs text-slate-400 uppercase">{quest.branch}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
