@@ -40,7 +40,6 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   };
 
   const handleCompleteQuest = async (questId) => {
-    haptic.light();
     setLoading(true);
 
     try {
@@ -56,11 +55,10 @@ export default function HomeScreen({ user, progress, onRefresh }) {
           `🎉 Поздравляем! Ты достиг уровня ${result.new_level}!`,
           () => {}
         );
-      } else {
-        haptic.success();
       }
 
       onRefresh();
+      setConfirmQuest(null);
     } catch (error) {
       haptic.error();
       console.error('Error completing quest:', error);
