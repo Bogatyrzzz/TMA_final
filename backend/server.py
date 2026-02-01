@@ -42,6 +42,8 @@ class User(BaseModel):
     tg_id: int
     username: Optional[str] = None
     first_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
     active_branches: List[str] = ['power']
     is_pro: bool = False
     strength: int = 1
