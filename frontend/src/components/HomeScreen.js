@@ -105,75 +105,58 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 
           {/* UI Content - Overlaid on background */}
           <div className="relative z-10 flex-1 flex flex-col">
-            {/* RPG HUD - Level Circle + XP Bar */}
-            <div className="p-4 pb-2">
-              <div className="flex items-center">
-                {/* Level Circle - Left Anchor */}
-                <motion.div 
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  className="relative z-10 flex-shrink-0"
-                >
-                  {/* Outer glow */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full blur-md opacity-60" />
-                  
-                  {/* Main circle */}
-                  <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-1 shadow-xl">
-                    {/* Inner glossy effect */}
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-purple-700 flex items-center justify-center border-4 border-indigo-300/30 relative overflow-hidden">
-                      {/* Glossy shine */}
-                      <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-full" />
-                      
-                      {/* Level number */}
-                      <span className="font-black text-2xl text-white drop-shadow-lg relative z-10">
-                        {progress.current_level}
-                      </span>
-                    </div>
+            {/* RPG HUD - Level Circle + XP Bar (Seamless Organic Shape) */}
+            <div className="flex items-center w-full px-4 pt-4 absolute top-0 left-0 z-50">
+              {/* Level Circle - Left Anchor (ON TOP) */}
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center relative z-20 shadow-[0_0_15px_rgba(139,92,246,0.6)] bg-gradient-to-br from-[#6366f1] to-[#a855f7] border-4 border-[#0F0F23]"
+              >
+                <span className="text-white font-black text-xl leading-none">
+                  {progress.current_level}
+                </span>
+                
+                {/* PRO Crown Badge */}
+                {user.is_pro && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-[#0F0F23] shadow-lg">
+                    <Crown size={12} className="text-white" />
                   </div>
-                  
-                  {/* PRO Crown Badge */}
-                  {user.is_pro && (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3, type: 'spring' }}
-                      className="absolute -top-1 -right-1 w-7 h-7 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-yellow-300 shadow-lg"
-                    >
-                      <Crown size={14} className="text-white drop-shadow" />
-                    </motion.div>
-                  )}
-                </motion.div>
+                )}
+              </motion.div>
 
-                {/* XP Progress Bar - Right Extension */}
-                <div className="flex-1 -ml-4 pl-6 relative">
-                  {/* Bar container with connection to circle */}
-                  <div className="bg-black/40 backdrop-blur-sm rounded-r-full rounded-l-lg py-2 px-3 border border-white/20 border-l-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-white/70">XP</span>
-                      <span className="text-xs font-bold text-cyan-400">
-                        {progress.current_xp}/{progress.next_level_xp}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-black/40 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full relative"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${xpPercentage}%` }}
-                        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                      >
-                        {/* Shimmer effect */}
-                        <motion.div 
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                          animate={{ x: ['-100%', '100%'] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                        />
-                      </motion.div>
-                    </div>
-                  </div>
+              {/* XP Bar Container - Right Extension (UNDER the circle) */}
+              <div className="flex-1 h-10 -ml-6 pl-8 pr-4 bg-slate-900/90 backdrop-blur-md rounded-r-2xl border border-white/10 flex flex-col justify-center relative z-10">
+                {/* Text Labels */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {progress.current_xp}/{progress.next_level_xp}
+                  </span>
+                </div>
+                
+                {/* XP Fill Track */}
+                <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden mt-1">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] rounded-full relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${xpPercentage}%` }}
+                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                  >
+                    {/* Shimmer effect */}
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                      animate={{ x: ['-100%', '100%'] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                    />
+                  </motion.div>
                 </div>
               </div>
             </div>
+
+            {/* Spacer for the fixed HUD */}
+            <div className="h-20" />
 
             {/* Stats - positioned on sides */}
             <div className="flex-1 relative">
