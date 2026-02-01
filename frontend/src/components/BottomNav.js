@@ -30,7 +30,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
                   haptic.light();
                   onTabChange(item.id);
                 }}
-                className=\"relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all no-select\"
+                className="relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all no-select"
                 whileTap={{ scale: 0.9 }}
                 data-testid={`nav-${item.id}`}
               >
