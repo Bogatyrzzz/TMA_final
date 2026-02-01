@@ -1,52 +1,119 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import { initTelegram, getTelegramUser, haptic } from './lib/telegram';
+import { api } from './lib/api';
+import Onboarding from './components/Onboarding';
+import HomeScreen from './components/HomeScreen';
+import './App.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+function App() {
+  const [loading, setLoading] = useState(true);
+  const [tgUser, setTgUser] = useState(null);
+  const [user, setUser] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
-const Home = () => {
-  const helloWorldApi = async () => {
+  useEffect(() => {
+    // Initialize Telegram Web App
+    const tg = initTelegram();
+    const telegramUser = getTelegramUser();
+    
+    // For development fallback
+    const devUser = telegramUser || {
+      id: 123456789,
+      first_name: 'Test',
+      last_name: 'User',
+      username: 'testuser',
+      language_code: 'ru',
+    };
+    
+    setTgUser(devUser);
+    initializeUser(devUser);
+  }, []);
+
+  const initializeUser = async (telegramUser) => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      // Register or get existing user
+      const userData = await api.registerUser({
+        tg_id: telegramUser.id,
+        username: telegramUser.username,
+        first_name: telegramUser.first_name,
+        last_name: telegramUser.last_name,
+        language_code: telegramUser.language_code || 'en',
+      });
+
+      setUser(userData);
+
+      // Check if onboarding is needed
+      if (!userData.age || !userData.avatar_url) {
+        setShowOnboarding(true);
+      } else {
+        // Load progress
+        const progressData = await api.getProgress(telegramUser.id);
+        setProgress(progressData);
+      }
+
+      haptic.light();
+    } catch (error) {
+      console.error('Error initializing user:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  const handleOnboardingComplete = async (onboardingData) => {
+    try {
+      setLoading(true);
+      
+      // Complete onboarding
+      await api.completeOnboarding(tgUser.id, onboardingData);
+      
+      // Reload user and progress
+      const userData = await api.getUser(tgUser.id);
+      const progressData = await api.getProgress(tgUser.id);
+      
+      setUser(userData);
+      setProgress(progressData);
+      setShowOnboarding(false);
+      
+      haptic.success();
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      haptic.error();
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+  const handleRefresh = async () => {
+    try {
+      const userData = await api.getUser(tgUser.id);
+      const progressData = await api.getProgress(tgUser.id);
+      
+      setUser(userData);
+      setProgress(progressData);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  };
 
-function App() {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#0F0F23] to-[#1a1a2e] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🦸</div>
+          <div className="text-white text-xl">Загрузка...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} />
     </div>
   );
 }
