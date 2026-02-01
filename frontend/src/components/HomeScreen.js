@@ -7,15 +7,15 @@ import BottomNav from './BottomNav';
 import MenuModal from './MenuModal';
 import QuestConfirmModal from './QuestConfirmModal';
 
-// Stats icons config
-const STATS_CONFIG = {
-  strength: { icon: '💪', label: 'Сила', color: 'from-red-500 to-red-600', bgColor: 'bg-red-500/20' },
-  health: { icon: '❤️', label: 'Здоровье', color: 'from-pink-500 to-pink-600', bgColor: 'bg-pink-500/20' },
-  intellect: { icon: '🧠', label: 'Интеллект', color: 'from-blue-500 to-blue-600', bgColor: 'bg-blue-500/20' },
-  agility: { icon: '⚡', label: 'Ловкость', color: 'from-yellow-500 to-yellow-600', bgColor: 'bg-yellow-500/20' },
-  confidence: { icon: '🔥', label: 'Уверенность', color: 'from-orange-500 to-orange-600', bgColor: 'bg-orange-500/20' },
-  stability: { icon: '🧘', label: 'Стабильность', color: 'from-cyan-500 to-cyan-600', bgColor: 'bg-cyan-500/20' },
-};
+// Compact Stats Config - only icons
+const STATS = [
+  { key: 'strength', icon: '💪', color: 'text-red-400' },
+  { key: 'health', icon: '❤️', color: 'text-pink-400' },
+  { key: 'intellect', icon: '🧠', color: 'text-blue-400' },
+  { key: 'agility', icon: '⚡', color: 'text-yellow-400' },
+  { key: 'confidence', icon: '🔥', color: 'text-orange-400' },
+  { key: 'stability', icon: '🧘', color: 'text-cyan-400' },
+];
 
 export default function HomeScreen({ user, progress, onRefresh }) {
   const [quests, setQuests] = useState([]);
