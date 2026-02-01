@@ -174,7 +174,7 @@ async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
                         'gender': onboarding.gender,
                         'age': onboarding.age,
                         'level': 1
-                    }, timeout=10.0)
+                    }, timeout=30.0)
             except Exception as e:
                 logging.error(f"Error calling n8n webhook: {e}")
         
