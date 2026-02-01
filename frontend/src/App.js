@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { initTelegram, getTelegramUser, haptic } from './lib/telegram';
 import { api } from './lib/api';
 import Onboarding from './components/Onboarding';
