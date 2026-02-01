@@ -22,6 +22,8 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     loadQuests();
@@ -67,6 +69,21 @@ export default function HomeScreen({ user, progress, onRefresh }) {
       console.error('Error completing quest:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleMenuAction = (action) => {
+    haptic.medium();
+    setShowMenu(false);
+    
+    if (action === 'pro') {
+      setShowProModal(true);
+    } else if (action === 'settings') {
+      // Handle settings
+    } else if (action === 'help') {
+      // Handle help
+    } else if (action === 'logout') {
+      // Handle logout
     }
   };
 
