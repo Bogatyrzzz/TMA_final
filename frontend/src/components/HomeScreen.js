@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Target, Star, CheckCircle2, Circle, Trophy, Sparkles } from 'lucide-react';
+import { Zap, ChevronRight, Star, Crown } from 'lucide-react';
 import { haptic, showConfirm } from '../lib/telegram';
 import { api } from '../lib/api';
 import BottomNav from './BottomNav';
 import MenuModal from './MenuModal';
+import QuestConfirmModal from './QuestConfirmModal';
 
 // Stats icons config
 const STATS_CONFIG = {
