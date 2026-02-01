@@ -80,155 +80,140 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const totalDaily = quests.filter(q => q.is_daily).length;
 
   return (
-    <div className="h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white overflow-hidden flex flex-col">
-      {/* Home Tab - Hero with Avatar */}
+    <div className="h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white flex flex-col">
+      {/* Home Tab - Avatar as Background */}
       {activeTab === 'home' && (
-        <div className="flex-1 flex flex-col">
-          {/* XP Bar at top */}
-          <div className="p-4 pb-2">
-            <div className="flex items-center justify-between mb-1">
-              <div className="text-sm text-slate-400">Уровень {progress.current_level}</div>
-              <div className="text-sm font-bold text-cyan-400">
-                {progress.current_xp} / {progress.next_level_xp} XP
+        <div className="flex-1 flex flex-col relative overflow-hidden">
+          {/* Avatar Background - Full Screen */}
+          {user.avatar_url && !user.avatar_url.includes('placehold') ? (
+            <div className="absolute inset-0">
+              <img
+                src={user.avatar_url}
+                alt="Hero Background"
+                className="w-full h-full object-cover"
+                style={{ objectPosition: 'center center' }}
+              />
+              {/* Gradient overlays for UI readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/60 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+            </div>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-indigo-950/30 to-slate-950 flex items-center justify-center">
+              <span className="text-9xl opacity-30">🦸</span>
+            </div>
+          )}
+
+          {/* UI Content - Overlaid on background */}
+          <div className="relative z-10 flex-1 flex flex-col">
+            {/* XP Bar at top */}
+            <div className="p-4 pb-2">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-sm text-white/80 font-medium drop-shadow-lg">Уровень {progress.current_level}</div>
+                <div className="text-sm font-bold text-cyan-400 drop-shadow-lg">
+                  {progress.current_xp} / {progress.next_level_xp} XP
+                </div>
+              </div>
+              <div className="h-2.5 bg-black/30 backdrop-blur-sm rounded-full overflow-hidden border border-white/20">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full relative"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${xpPercentage}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                </motion.div>
               </div>
             </div>
-            <div className="h-2.5 bg-slate-800/50 rounded-full overflow-hidden border border-slate-700">
-              <motion.div
-                className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full relative"
-                initial={{ width: 0 }}
-                animate={{ width: `${xpPercentage}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
+
+            {/* Level Badge - Centered at top */}
+            <div className="flex justify-center pt-2">
+              <motion.div 
+                initial={{ scale: 0, y: -20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="flex items-center gap-2"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                <div className="bg-gradient-to-r from-orange-500 to-pink-500 rounded-full px-5 py-2 border-2 border-white/20 shadow-xl backdrop-blur-sm">
+                  <div className="text-xl font-bold drop-shadow-lg">LVL {progress.current_level}</div>
+                </div>
+                {user.is_pro && (
+                  <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2.5 border-2 border-white/20 shadow-xl">
+                    <Crown size={20} className="text-white drop-shadow-lg" />
+                  </div>
+                )}
               </motion.div>
             </div>
-          </div>
 
-          {/* Avatar Section - Compact */}
-          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
-            {/* Stats positioned around avatar */}
-            <div className="absolute inset-0 px-2">
+            {/* Stats - positioned on sides */}
+            <div className="flex-1 relative">
               {/* Left side stats */}
-              <div className="absolute left-1 top-1/2 transform -translate-y-1/2 space-y-2">
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 space-y-2">
                 {STATS.slice(0, 3).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-slate-800/80 backdrop-blur-sm rounded-full px-2 py-1 border border-slate-700/50"
+                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
                   >
                     <div className="text-base">{stat.icon}</div>
-                    <div className={`text-sm font-bold ${stat.color}`}>{user[stat.key] || 1}</div>
+                    <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
                   </motion.div>
                 ))}
               </div>
 
               {/* Right side stats */}
-              <div className="absolute right-1 top-1/2 transform -translate-y-1/2 space-y-2">
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 space-y-2">
                 {STATS.slice(3, 6).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-slate-800/80 backdrop-blur-sm rounded-full px-2 py-1 border border-slate-700/50"
+                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
                   >
-                    <div className={`text-sm font-bold ${stat.color}`}>{user[stat.key] || 1}</div>
+                    <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
                     <div className="text-base">{stat.icon}</div>
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            {/* Avatar container - smaller */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              className="relative z-10"
-            >
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/20 via-purple-500/20 to-transparent rounded-full blur-2xl" />
-              
-              {/* Avatar image - compact size */}
-              <div className="relative w-44 h-64 rounded-2xl overflow-hidden bg-gradient-to-b from-slate-800/50 to-slate-900/50 border border-slate-700/50">
-                {user.avatar_url && !user.avatar_url.includes('placehold') ? (
-                  <>
-                    <img
-                      src={user.avatar_url}
-                      alt="Hero"
-                      className="w-full h-full object-cover"
-                      style={{ 
-                        objectPosition: 'center 10%',
-                        transform: 'scale(1.05)'
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                    {/* Gradient overlay to blend avatar with background */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-transparent to-transparent pointer-events-none" />
-                  </>
-                ) : null}
-                <div 
-                  className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center text-6xl"
-                  style={{ display: user.avatar_url && !user.avatar_url.includes('placehold') ? 'none' : 'flex' }}
-                >
-                  🦸
-                </div>
-              </div>
-
-              {/* Level badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full px-4 py-1.5 border-2 border-slate-900 shadow-xl">
-                <div className="text-lg font-bold">LVL {progress.current_level}</div>
-              </div>
-
-              {/* PRO badge if active */}
-              {user.is_pro && (
-                <div className="absolute -top-3 -right-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 border-2 border-slate-900 shadow-xl">
-                  <Crown size={18} className="text-white" />
-                </div>
-              )}
-            </motion.div>
-          </div>
-
-          {/* Daily Quests Progress Button - Always visible */}
-          <div className="px-4 pb-24 pt-2">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                haptic.medium();
-                setActiveTab('quests');
-              }}
-              className="w-full bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-3 border border-slate-600 shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <Star size={20} className="text-white" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-base">Ежедневные квесты</div>
-                    <div className="text-xs text-slate-400">
-                      {completedDaily} / {totalDaily} выполнено
+            {/* Daily Quests Progress Button - Always visible at bottom */}
+            <div className="px-4 pb-24 pt-2">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  haptic.medium();
+                  setActiveTab('quests');
+                }}
+                className="w-full bg-black/40 backdrop-blur-md rounded-xl p-3 border border-white/20 shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <Star size={20} className="text-white" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-bold text-base drop-shadow-lg">Ежедневные квесты</div>
+                      <div className="text-xs text-white/70">
+                        {completedDaily} / {totalDaily} выполнено
+                      </div>
                     </div>
                   </div>
+                  <ChevronRight size={20} className="text-white/70" />
                 </div>
-                <ChevronRight size={20} className="text-slate-400" />
-              </div>
-              
-              {/* Progress bar */}
-              <div className="mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: totalDaily > 0 ? `${(completedDaily / totalDaily) * 100}%` : '0%' }}
-                  transition={{ duration: 0.5 }}
-                />
-              </div>
-            </motion.button>
+                
+                {/* Progress bar */}
+                <div className="mt-2 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: totalDaily > 0 ? `${(completedDaily / totalDaily) * 100}%` : '0%' }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </motion.button>
+            </div>
           </div>
         </div>
       )}
