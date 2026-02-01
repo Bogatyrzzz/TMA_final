@@ -26,6 +26,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 
   useEffect(() => {
     loadQuests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadQuests = async () => {
