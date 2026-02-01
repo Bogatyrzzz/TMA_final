@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ChevronRight, Star, Crown, CheckCircle2, Circle, Trophy } from 'lucide-react';
-import { haptic, showConfirm } from '../lib/telegram';
+import { haptic } from '../lib/telegram';
 import { api } from '../lib/api';
 import BottomNav from './BottomNav';
 import MenuModal from './MenuModal';
 import QuestConfirmModal from './QuestConfirmModal';
+import LevelUpModal from './LevelUpModal';
 
 // Compact Stats Config - only icons
 const STATS = [
@@ -24,6 +25,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const [activeTab, setActiveTab] = useState('home');
   const [showMenu, setShowMenu] = useState(false);
   const [confirmQuest, setConfirmQuest] = useState(null);
+  const [levelUpData, setLevelUpData] = useState(null);
 
   useEffect(() => {
     loadQuests();
@@ -51,10 +53,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 
       if (result.leveled_up) {
         haptic.success();
-        showConfirm(
-          `🎉 Поздравляем! Ты достиг уровня ${result.new_level}!`,
-          () => {}
-        );
+        setLevelUpData(result.new_level);
       }
 
       onRefresh();
@@ -81,7 +80,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const totalDaily = quests.filter(q => q.is_daily).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white pb-32">
+    <div className="h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white overflow-hidden flex flex-col">
       {/* Home Tab - Hero with Avatar */}
       {activeTab === 'home' && (
         <div className="relative min-h-screen flex flex-col">
