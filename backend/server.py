@@ -357,10 +357,14 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
 async def avatar_generated_webhook(data: dict):
     """Webhook to receive generated avatar from n8n"""
     try:
+        # Логируем полученные данные
+        logging.info(f"Avatar webhook received data: {data}")
+        
         user_id = data.get('user_id')
         avatar_url = data.get('avatar_url')
         
         if not user_id or not avatar_url:
+            logging.error(f"Missing fields - user_id: {user_id}, avatar_url: {avatar_url}")
             raise HTTPException(status_code=400, detail="Missing required fields")
         
         # Update user avatar
@@ -377,6 +381,7 @@ async def avatar_generated_webhook(data: dict):
             'generation_status': 'completed'
         }).execute()
         
+        logging.info(f"Avatar updated for user {user_id}: {avatar_url}")
         return {"success": True, "message": "Avatar updated"}
         
     except HTTPException:
