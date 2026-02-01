@@ -109,35 +109,35 @@ export default function HomeScreen({ user, progress, onRefresh }) {
           {/* Avatar - Full height, well visible */}
           <div className="flex-1 flex items-center justify-center px-6 relative">
             {/* Stats positioned around avatar */}
-            <div className="absolute inset-0 px-6">
+            <div className="absolute inset-0 px-4">
               {/* Left side stats */}
-              <div className="absolute left-6 top-1/2 transform -translate-y-1/2 space-y-4">
+              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 space-y-3">
                 {STATS.slice(0, 3).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-2 bg-slate-800/60 backdrop-blur-sm rounded-full pl-2 pr-3 py-2 border border-slate-700/50"
+                    className="flex items-center space-x-1 bg-slate-800/80 backdrop-blur-sm rounded-full px-2 py-1.5 border border-slate-700/50"
                   >
-                    <div className="text-2xl">{stat.icon}</div>
-                    <div className={`text-xl font-bold ${stat.color}`}>{user[stat.key]}</div>
+                    <div className="text-lg">{stat.icon}</div>
+                    <div className={`text-base font-bold ${stat.color}`}>{user[stat.key] || 1}</div>
                   </motion.div>
                 ))}
               </div>
 
               {/* Right side stats */}
-              <div className="absolute right-6 top-1/2 transform -translate-y-1/2 space-y-4">
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 space-y-3">
                 {STATS.slice(3, 6).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-2 bg-slate-800/60 backdrop-blur-sm rounded-full pl-3 pr-2 py-2 border border-slate-700/50"
+                    className="flex items-center space-x-1 bg-slate-800/80 backdrop-blur-sm rounded-full px-2 py-1.5 border border-slate-700/50"
                   >
-                    <div className={`text-xl font-bold ${stat.color}`}>{user[stat.key]}</div>
-                    <div className="text-2xl">{stat.icon}</div>
+                    <div className={`text-base font-bold ${stat.color}`}>{user[stat.key] || 1}</div>
+                    <div className="text-lg">{stat.icon}</div>
                   </motion.div>
                 ))}
               </div>
