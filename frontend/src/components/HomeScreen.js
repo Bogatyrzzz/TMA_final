@@ -154,19 +154,23 @@ export default function HomeScreen({ user, progress, onRefresh }) {
               {/* Avatar image - compact size */}
               <div className="relative w-44 h-64 rounded-2xl overflow-hidden bg-gradient-to-b from-slate-800/50 to-slate-900/50 border border-slate-700/50">
                 {user.avatar_url && !user.avatar_url.includes('placehold') ? (
-                  <img
-                    src={user.avatar_url}
-                    alt="Hero"
-                    className="w-full h-full object-cover object-top"
-                    style={{ 
-                      objectPosition: 'center 15%',
-                      transform: 'scale(1.1)'
-                    }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
+                  <>
+                    <img
+                      src={user.avatar_url}
+                      alt="Hero"
+                      className="w-full h-full object-cover"
+                      style={{ 
+                        objectPosition: 'center 20%',
+                        transform: 'scale(1.15)'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    {/* Gradient overlay to blend avatar with background */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-transparent pointer-events-none" />
+                  </>
                 ) : null}
                 <div 
                   className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center text-6xl"
@@ -177,13 +181,13 @@ export default function HomeScreen({ user, progress, onRefresh }) {
               </div>
 
               {/* Level badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full px-4 py-1.5 border-3 border-slate-900 shadow-xl">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full px-4 py-1.5 border-2 border-slate-900 shadow-xl">
                 <div className="text-lg font-bold">LVL {progress.current_level}</div>
               </div>
 
               {/* PRO badge if active */}
               {user.is_pro && (
-                <div className="absolute -top-3 -right-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 border-3 border-slate-900 shadow-xl">
+                <div className="absolute -top-3 -right-3 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-2 border-2 border-slate-900 shadow-xl">
                   <Crown size={18} className="text-white" />
                 </div>
               )}
