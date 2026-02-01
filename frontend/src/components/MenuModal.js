@@ -18,7 +18,7 @@ export default function MenuModal({ isOpen, onClose, onItemClick }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className=\"fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end\"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end"
           onClick={onClose}
         >
           <motion.div
@@ -26,12 +26,12 @@ export default function MenuModal({ isOpen, onClose, onItemClick }) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className=\"w-full glass rounded-t-3xl p-6 pb-8\"
+            className="w-full glass rounded-t-3xl p-6 pb-8"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className=\"flex justify-between items-center mb-6\">
-              <h2 className=\"text-2xl font-bold text-gaming\">МЕНЮ</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gaming">МЕНЮ</h2>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
