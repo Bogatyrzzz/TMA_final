@@ -347,41 +347,27 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 // Quest Card Component - Detached style
 function QuestCard({ quest, index, onComplete, disabled }) {
   return (
-    <motion.div
+    <motion.button
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`glass rounded-2xl p-5 border ${
+      whileHover={!disabled ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!disabled ? { scale: 0.98 } : {}}
+      onClick={!disabled ? onComplete : undefined}
+      disabled={disabled}
+      className={`w-full text-left rounded-2xl p-5 border transition-all ${
         quest.is_completed
-          ? 'border-green-500/50 bg-green-500/10'
-          : 'border-white/10'
-      } transition-all quest-card-enter`}
+          ? 'bg-green-500/10 border-green-500/50'
+          : 'bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:bg-slate-700/50'
+      }`}
       data-testid={`quest-${quest.id}`}
     >
       <div className="flex items-start space-x-4">
-        <motion.button
-          onClick={onComplete}
-          disabled={disabled}
-          whileTap={{ scale: 0.9 }}
-          className={`mt-1 w-8 h-8 rounded-full border-2 flex items-center justify-center ${
-            quest.is_completed
-              ? 'bg-green-500 border-green-500'
-              : 'border-slate-600 hover:border-[#4ECDC4]'
-          } transition-all`}
-          data-testid={`quest-checkbox-${quest.id}`}
-        >
-          {quest.is_completed ? (
-            <CheckCircle2 size={20} className="text-white" />
-          ) : (
-            <Circle size={20} className="text-slate-600" />
-          )}
-        </motion.button>
-
+        <div className="text-3xl">{quest.title.split(' ')[0]}</div>
+        
         <div className="flex-1">
           <h4 className={`font-bold text-lg mb-1 ${
-            quest.is_completed ? 'line-through text-slate-500' : ''
+            quest.is_completed ? 'line-through text-slate-500' : 'text-white'
           }`}>
             {quest.title}
           </h4>
@@ -390,9 +376,25 @@ function QuestCard({ quest, index, onComplete, disabled }) {
           )}
           
           <div className="flex items-center gap-2">
-            <div className="glass rounded-full px-3 py-1 flex items-center space-x-1">
-              <Zap size={14} className="text-[#4ECDC4]" />
-              <span className="text-xs font-bold text-[#4ECDC4]">+{quest.xp_reward}</span>
+            <div className="bg-cyan-500/20 rounded-full px-3 py-1 flex items-center space-x-1 border border-cyan-500/30">
+              <Zap size={14} className="text-cyan-400" />
+              <span className="text-xs font-bold text-cyan-400">+{quest.xp_reward}</span>
+            </div>
+            {quest.branch !== 'global' && (
+              <div className="bg-slate-700/50 rounded-full px-3 py-1 border border-slate-600">
+                <span className="text-xs text-slate-400 uppercase font-medium">{quest.branch}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {quest.is_completed && (
+          <div className="text-2xl">✅</div>
+        )}
+      </div>
+    </motion.button>
+  );
+}
             </div>
             {quest.branch !== 'global' && (
               <div className="glass rounded-full px-3 py-1">
