@@ -160,8 +160,8 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                       alt="Hero"
                       className="w-full h-full object-cover"
                       style={{ 
-                        objectPosition: 'center 20%',
-                        transform: 'scale(1.15)'
+                        objectPosition: 'center 10%',
+                        transform: 'scale(1.05)'
                       }}
                       onError={(e) => {
                         e.target.style.display = 'none';
@@ -169,7 +169,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                     />
                     {/* Gradient overlay to blend avatar with background */}
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent pointer-events-none" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/30 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-transparent to-transparent pointer-events-none" />
                   </>
                 ) : null}
                 <div 
