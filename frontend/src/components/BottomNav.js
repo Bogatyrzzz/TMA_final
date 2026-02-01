@@ -50,8 +50,8 @@ export default function BottomNav({ activeTab, onTabChange }) {
                 
                 {isActive && (
                   <motion.div
-                    layoutId=\"activeTab\"
-                    className=\"absolute inset-0 rounded-2xl\"
+                    layoutId="activeTab"
+                    className="absolute inset-0 rounded-2xl"
                     style={{
                       background: `radial-gradient(circle, ${item.color}20 0%, transparent 70%)`,
                     }}
