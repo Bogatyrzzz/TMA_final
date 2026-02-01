@@ -27,7 +27,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated",
+        "url": "https://quest-hero-3.preview.emergentagent.com/api/webhooks/avatar-generated",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",

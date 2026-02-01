@@ -69,7 +69,7 @@ Headers:
 #### Нода 5: Send to Backend
 ✅ **Проверь:**
 ```
-URL: https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated
+URL: https://quest-hero-3.preview.emergentagent.com/api/webhooks/avatar-generated
 Method: POST
 Body Type: JSON
 Body:
@@ -240,7 +240,7 @@ POST /api/webhooks/avatar-generated - 200 OK
     {
       "parameters": {
         "method": "POST",
-        "url": "https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated",
+        "url": "https://quest-hero-3.preview.emergentagent.com/api/webhooks/avatar-generated",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}"
@@ -304,7 +304,7 @@ tail -f /var/log/supervisor/backend.out.log | grep avatar-generated
 
 6. **Проверь пользователя:**
 ```bash
-curl -s https://spec-analyzer-4.preview.emergentagent.com/api/users/999888777 | jq .avatar_url
+curl -s https://quest-hero-3.preview.emergentagent.com/api/users/999888777 | jq .avatar_url
 ```
    - Должен быть URL вида: `https://placehold.co/400x400/...`
 

@@ -17,7 +17,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Configuration
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-WEB_APP_URL = os.environ.get('WEB_APP_URL', 'https://spec-analyzer-4.preview.emergentagent.com')
+WEB_APP_URL = os.environ.get('WEB_APP_URL', 'https://quest-hero-3.preview.emergentagent.com')
 
 supabase = get_supabase()
 

@@ -157,7 +157,7 @@ low quality, blurry, distorted, ugly, bad anatomy, extra limbs
 ### 5. n8n отправляет результат в backend
 
 ```javascript
-POST https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated
+POST https://quest-hero-3.preview.emergentagent.com/api/webhooks/avatar-generated
 {
   user_id: 'uuid',
   avatar_url: 'https://...',

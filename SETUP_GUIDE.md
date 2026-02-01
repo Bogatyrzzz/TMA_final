@@ -34,7 +34,7 @@
 
 5. Настрой кнопку:
    - Text: `LifeQuest Hero`
-   - URL: `https://spec-analyzer-4.preview.emergentagent.com`
+   - URL: `https://quest-hero-3.preview.emergentagent.com`
 
 ### 3️⃣ Настройка n8n для генерации AI-аватаров
 
@@ -100,7 +100,7 @@ tail -f /var/log/supervisor/frontend.out.log
 ```
 
 ### Открой приложение:
-1. Перейди по ссылке: https://spec-analyzer-4.preview.emergentagent.com
+1. Перейди по ссылке: https://quest-hero-3.preview.emergentagent.com
 2. Должен открыться экран загрузки, затем онбординг
 3. Если ошибка - проверь что таблицы созданы в Supabase!
 
