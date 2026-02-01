@@ -356,6 +356,14 @@ export default function HomeScreen({ user, progress, onRefresh }) {
           onCancel={() => setConfirmQuest(null)}
         />
       )}
+
+      {/* Level Up Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          level={levelUpData}
+          onClose={() => setLevelUpData(null)}
+        />
+      )}
     </div>
   );
 }
