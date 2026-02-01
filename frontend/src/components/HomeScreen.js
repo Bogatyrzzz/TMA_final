@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Target, Star, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from './ui/button';
-import { Progress } from './ui/progress';
-import { Card } from './ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
 import { haptic, showConfirm } from '../lib/telegram';
 import { api } from '../lib/api';
+import BottomNav from './BottomNav';
+import MenuModal from './MenuModal';
 
 // Stats icons
 const STATS_CONFIG = {
