@@ -1,0 +1,177 @@
+{
+  "name": "LifeQuest Hero - Avatar Generator (fal.ai)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lifequest-avatar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "lifequest-avatar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные от backend\nconst userData = $input.item.json;\nconst branch = userData.branch || 'power';\nconst gender = userData.gender || 'male';\nconst age = userData.age || 25;\nconst level = userData.level || 1;\nconst selfieUrl = userData.selfie_url;\n\n// Определяем стиль одежды в зависимости от ветки\nconst clothingStyles = {\n  power: {\n    male: 'wearing athletic sportswear: black hoodie, grey joggers, white sneakers',\n    female: 'wearing athletic sportswear: sports top, black leggings, white sneakers'\n  },\n  stability: {\n    male: 'wearing business casual: blue button-up shirt, beige chinos, brown loafers',\n    female: 'wearing business casual: white blouse, black trousers, elegant flats'\n  },\n  longevity: {\n    male: 'wearing comfortable casual: plain t-shirt, blue jeans, comfortable sneakers',\n    female: 'wearing comfortable casual: casual top, yoga pants, comfortable sneakers'\n  }\n};\n\n// Получаем одежду для конкретной ветки и пола\nconst clothing = clothingStyles[branch][gender];\n\n// Промпт для fal.ai (image-to-image)\nconst prompt = `3D cartoon character, animated movie style, pixar-like quality, ${clothing}, standing confidently, clean gradient background, vibrant colors, smooth textures, professional lighting, high quality render, maintaining facial features and hairstyle from reference image`;\n\n// Negative prompt (что НЕ должно быть)\nconst negativePrompt = 'superhero costume, cape, mask, armor, weapons, low quality, blurry, distorted, ugly, bad anatomy, extra limbs';\n\n// Параметры в зависимости от уровня\nconst strength = level <= 10 ? 0.75 : level <= 25 ? 0.70 : 0.65; // Чем выше уровень, тем больше детализация\n\n// Возвращаем все данные\nreturn {\n  user_id: userData.user_id,\n  tg_id: userData.tg_id,\n  selfie_url: selfieUrl,\n  branch: branch,\n  level: level,\n  gender: gender,\n  age: age,\n  prompt: prompt,\n  negative_prompt: negativePrompt,\n  strength: strength\n};"
+      },
+      "id": "generate-prompt",
+      "name": "Generate Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fal.run/fal-ai/flux-pro/v1.1-ultra",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "falAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key {{ $env.FAL_AI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.prompt }}\",\n  \"image_url\": \"{{ $json.selfie_url }}\",\n  \"negative_prompt\": \"{{ $json.negative_prompt }}\",\n  \"num_inference_steps\": 50,\n  \"guidance_scale\": 7.5,\n  \"strength\": {{ $json.strength }},\n  \"num_images\": 1,\n  \"output_format\": \"jpeg\",\n  \"safety_tolerance\": \"2\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 300000
+        }
+      },
+      "id": "call-fal-ai",
+      "name": "Call fal.ai API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300],
+      "notes": "FLUX Pro - Image to Image transformation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем результат от fal.ai\nconst response = $input.item.json;\nconst prevData = $('Generate Prompt').item.json;\n\n// Извлекаем URL сгенерированного изображения\nlet avatarUrl = null;\n\nif (response.images && response.images.length > 0) {\n  avatarUrl = response.images[0].url;\n} else if (response.image && response.image.url) {\n  avatarUrl = response.image.url;\n} else if (response.url) {\n  avatarUrl = response.url;\n}\n\n// Если URL не получен, используем заглушку\nif (!avatarUrl) {\n  console.error('Avatar URL not found in response:', response);\n  avatarUrl = 'https://placehold.co/512x512/FF6B35/FFF?text=Hero+Level+' + prevData.level;\n}\n\nreturn {\n  user_id: prevData.user_id,\n  tg_id: prevData.tg_id,\n  avatar_url: avatarUrl,\n  level: prevData.level,\n  branch: prevData.branch,\n  generation_success: !!avatarUrl\n};"
+      },
+      "id": "process-image",
+      "name": "Process Image Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "send-to-backend",
+      "name": "Send to Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 300],
+      "notes": "Отправляем аватар обратно в LifeQuest Hero backend"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Avatar generation started', user_id: $json.user_id }) }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call fal.ai API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call fal.ai API": {
+      "main": [
+        [
+          {
+            "node": "Process Image Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Image Response": {
+      "main": [
+        [
+          {
+            "node": "Send to Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Backend": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-02-01T13:00:00.000Z",
+  "versionId": "1"
+}
