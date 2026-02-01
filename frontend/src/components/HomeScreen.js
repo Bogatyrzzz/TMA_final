@@ -77,16 +77,155 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   };
 
   const xpPercentage = (progress.current_xp / progress.next_level_xp) * 100;
+  const completedDaily = quests.filter(q => q.is_daily && q.is_completed).length;
+  const totalDaily = quests.filter(q => q.is_daily).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white pb-28">
-      {/* Hero Section */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white pb-32">
+      {/* Home Tab - Hero with Avatar */}
       {activeTab === 'home' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 space-y-6"
-        >
+        <div className="relative min-h-screen flex flex-col">
+          {/* XP Bar at top */}
+          <div className="p-6 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-slate-400">Уровень {progress.current_level}</div>
+              <div className="text-sm font-bold text-cyan-400">
+                {progress.current_xp} / {progress.next_level_xp} XP
+              </div>
+            </div>
+            <div className="h-3 bg-slate-800/50 rounded-full overflow-hidden border border-slate-700">
+              <motion.div
+                className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full relative"
+                initial={{ width: 0 }}
+                animate={{ width: `${xpPercentage}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              >
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Avatar - Full height, well visible */}
+          <div className="flex-1 flex items-center justify-center px-6 relative">
+            {/* Stats positioned around avatar */}
+            <div className="absolute inset-0 px-6">
+              {/* Left side stats */}
+              <div className="absolute left-6 top-1/2 transform -translate-y-1/2 space-y-4">
+                {STATS.slice(0, 3).map((stat, idx) => (
+                  <motion.div
+                    key={stat.key}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="flex items-center space-x-2 bg-slate-800/60 backdrop-blur-sm rounded-full pl-2 pr-3 py-2 border border-slate-700/50"
+                  >
+                    <div className="text-2xl">{stat.icon}</div>
+                    <div className={`text-xl font-bold ${stat.color}`}>{user[stat.key]}</div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Right side stats */}
+              <div className="absolute right-6 top-1/2 transform -translate-y-1/2 space-y-4">
+                {STATS.slice(3, 6).map((stat, idx) => (
+                  <motion.div
+                    key={stat.key}
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="flex items-center space-x-2 bg-slate-800/60 backdrop-blur-sm rounded-full pl-3 pr-2 py-2 border border-slate-700/50"
+                  >
+                    <div className={`text-xl font-bold ${stat.color}`}>{user[stat.key]}</div>
+                    <div className="text-2xl">{stat.icon}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Avatar container */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              className="relative z-10"
+            >
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/20 via-purple-500/20 to-transparent rounded-full blur-3xl" />
+              
+              {/* Avatar image - full height */}
+              <div className="relative w-64 h-96 rounded-3xl overflow-hidden">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt="Hero"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center text-8xl"
+                  style={{ display: user.avatar_url ? 'none' : 'flex' }}
+                >
+                  🦸
+                </div>
+              </div>
+
+              {/* Level badge */}
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full px-6 py-2 border-4 border-slate-900 shadow-xl">
+                <div className="text-2xl font-bold">LVL {progress.current_level}</div>
+              </div>
+
+              {/* PRO badge if active */}
+              {user.is_pro && (
+                <div className="absolute -top-4 -right-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-3 border-4 border-slate-900 shadow-xl">
+                  <Crown size={24} className="text-white" />
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Daily Quests Progress Button */}
+          <div className="px-6 pb-6">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                haptic.medium();
+                setActiveTab('quests');
+              }}
+              className="w-full bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-4 border border-slate-600 shadow-lg"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <Star size={24} className="text-white" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-lg">Ежедневные квесты</div>
+                    <div className="text-sm text-slate-400">
+                      {completedDaily} / {totalDaily} выполнено
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight size={24} className="text-slate-400" />
+              </div>
+              
+              {/* Progress bar */}
+              <div className="mt-3 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: totalDaily > 0 ? `${(completedDaily / totalDaily) * 100}%` : '0%' }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+            </motion.button>
+          </div>
+        </div>
+      )}
           {/* Level Badge */}
           <div className="flex justify-between items-start">
             <div>
