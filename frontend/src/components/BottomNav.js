@@ -1,78 +1,101 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Trophy, User, Menu as MenuIcon } from 'lucide-react';
+import { Home, Target, User, Sparkles } from 'lucide-react';
 import { haptic } from '../lib/telegram';
 
-const NAV_ITEMS = [
-  { id: 'home', icon: Home, label: 'Главная', color: '#FF6B35' },
-  { id: 'quests', icon: Trophy, label: 'Квесты', color: '#4ECDC4' },
-  { id: 'profile', icon: User, label: 'Профиль', color: '#8B5CF6' },
-  { id: 'menu', icon: MenuIcon, label: 'Меню', color: '#F59E0B' },
-];
-
 export default function BottomNav({ activeTab, onTabChange }) {
+  const navItems = [
+    { id: 'quests', icon: Target, size: 24 },
+    { id: 'home', icon: Home, size: 32, isCenter: true },
+    { id: 'profile', icon: User, size: 24 },
+    { id: 'sage', icon: Sparkles, size: 24, disabled: true },
+  ];
+
   return (
-    <motion.div
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      className="fixed bottom-4 left-4 right-4 z-50"
-    >
-      <div className="glass rounded-3xl p-2 shadow-2xl border border-white/20">
-        <div className="flex justify-around items-center">
-          {NAV_ITEMS.map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 pb-safe z-50">
+      <div className="relative px-6 pb-6">
+        {/* Blur background */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent backdrop-blur-xl" />
+        
+        {/* Navigation container */}
+        <div className="relative flex items-center justify-center gap-4">
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            const isCenter = item.isCenter;
+            
+            if (isCenter) {
+              return (
+                <motion.button
+                  key={item.id}
+                  onClick={() => {
+                    haptic.medium();
+                    onTabChange(item.id);
+                  }}
+                  className="relative"
+                  whileTap={{ scale: 0.9 }}
+                  data-testid="nav-home"
+                >
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-orange-500 to-pink-500 rounded-full blur-xl opacity-50" />
+                  
+                  {/* Button */}
+                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 p-[3px] shadow-2xl">
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-600 to-pink-600 flex items-center justify-center">
+                      <Icon size={item.size} className="text-white" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  
+                  {/* Active indicator */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg"
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              );
+            }
             
             return (
               <motion.button
                 key={item.id}
                 onClick={() => {
+                  if (item.disabled) return;
                   haptic.light();
                   onTabChange(item.id);
                 }}
-                className="relative flex flex-col items-center justify-center p-3 rounded-2xl transition-all no-select"
-                whileTap={{ scale: 0.9 }}
+                className="relative"
+                whileTap={!item.disabled ? { scale: 0.9 } : {}}
                 data-testid={`nav-${item.id}`}
               >
-                <motion.div
-                  animate={{
-                    y: isActive ? -4 : 0,
-                    scale: isActive ? 1.2 : 1,
-                  }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                >
-                  <Icon
-                    size={24}
-                    color={isActive ? item.color : '#94a3b8'}
-                    strokeWidth={isActive ? 3 : 2}
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
+                  item.disabled 
+                    ? 'bg-slate-800/50 opacity-40' 
+                    : isActive
+                    ? 'bg-gradient-to-br from-slate-700 to-slate-800 shadow-lg'
+                    : 'bg-slate-800/80 hover:bg-slate-700/80'
+                }`}>
+                  <Icon 
+                    size={item.size} 
+                    className={item.disabled ? 'text-slate-600' : isActive ? 'text-cyan-400' : 'text-slate-400'} 
+                    strokeWidth={2}
                   />
-                </motion.div>
+                </div>
                 
-                {isActive && (
+                {isActive && !item.disabled && (
                   <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 rounded-2xl"
-                    style={{
-                      background: `radial-gradient(circle, ${item.color}20 0%, transparent 70%)`,
-                    }}
+                    layoutId="activeIndicator"
+                    className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full shadow-lg"
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
-                
-                <motion.span
-                  className="text-[10px] mt-1 font-medium"
-                  animate={{
-                    opacity: isActive ? 1 : 0.6,
-                    color: isActive ? item.color : '#94a3b8',
-                  }}
-                >
-                  {item.label}
-                </motion.span>
               </motion.button>
             );
           })}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
