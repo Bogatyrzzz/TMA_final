@@ -249,7 +249,12 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                 key={quest.id}
                 quest={quest}
                 index={index}
-                onComplete={() => handleCompleteQuest(quest.id)}
+                onComplete={() => {
+                  if (!quest.is_completed) {
+                    haptic.light();
+                    setConfirmQuest(quest);
+                  }
+                }}
                 disabled={loading || quest.is_completed}
               />
             ))}
