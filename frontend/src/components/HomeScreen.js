@@ -23,6 +23,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const [showProModal, setShowProModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [showMenu, setShowMenu] = useState(false);
+  const [confirmQuest, setConfirmQuest] = useState(null);
 
   useEffect(() => {
     loadQuests();
