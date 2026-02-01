@@ -40,73 +40,42 @@
 
 **Пока n8n не настроен, аватары не будут генерироваться (будет показываться эмодзи 🦸)**
 
-#### Создай Workflow в n8n:
+#### ⚡ БЫСТРАЯ НАСТРОЙКА - Импорт готового workflow:
 
-1. **Webhook Trigger Node**
-   - Method: POST
-   - Путь: `/lifequest-avatar`
-   - Ожидаемые поля:
-     ```json
-     {
-       "user_id": "uuid",
-       "tg_id": 123456789,
-       "selfie_url": "https://...",
-       "branch": "power",
-       "gender": "male",
-       "age": 25,
-       "level": 1
-     }
-     ```
+**У меня есть 2 готовых workflow для импорта!**
 
-2. **Function Node** - создание промпта:
-   ```javascript
-   const branch = $input.item.json.branch;
-   const gender = $input.item.json.gender;
-   const age = $input.item.json.age;
-   const level = $input.item.json.level;
-   
-   const branchStyles = {
-     power: "muscular, strong, confident, wearing red and blue heroic costume",
-     stability: "balanced, wise, wearing blue and cyan meditation robes",
-     longevity: "healthy, agile, wearing green and emerald athletic gear"
-   };
-   
-   const prompt = `3D cartoon hero character in disney + realism style, ${branchStyles[branch]}, ${gender}, age ${age}, level ${level} hero, vibrant colors, heroic pose, white background, high quality render`;
-   
-   return { prompt, ...$ input.item.json };
-   ```
+1. **Для Gemini Nano Banana**: `/app/backend/n8n_workflow_lifequest_avatar.json`
+2. **Для fal.ai (рекомендуется)**: `/app/backend/n8n_workflow_lifequest_avatar_fal.json`
 
-3. **HTTP Request Node** - Gemini Nano Banana:
-   - Method: POST
-   - URL: API endpoint для Gemini Image Generation
-   - Body: промпт
-   - Результат: URL изображения
+**Импорт:**
+1. Открой n8n
+2. **Workflows** → **Import from File**
+3. Выбери один из файлов выше
+4. Настрой API ключи в Environment Variables:
+   - Gemini: `GOOGLE_API_KEY`
+   - fal.ai: `FAL_AI_API_KEY`
+5. Активируй workflow
+6. Скопируй Webhook URL
 
-4. **HTTP Request Node** - отправка результата:
-   - Method: POST
-   - URL: `https://spec-analyzer-4.preview.emergentagent.com/api/webhooks/avatar-generated`
-   - Body:
-     ```json
-     {
-       "user_id": "{{$json.user_id}}",
-       "avatar_url": "{{$json.avatar_url}}",
-       "level": {{$json.level}}
-     }
-     ```
+**Добавь webhook в backend:**
+```bash
+nano /app/backend/.env
+# Добавь: N8N_WEBHOOK_URL=https://твой-n8n.app/webhook/lifequest-avatar
+sudo supervisorctl restart backend
+```
 
-5. **Получи URL webhook** и добавь в `.env`:
-   ```bash
-   # Редактируй файл
-   nano /app/backend/.env
-   
-   # Добавь строку
-   N8N_WEBHOOK_URL=https://твой-n8n.com/webhook/lifequest-avatar
-   
-   # Сохрани (Ctrl+O, Enter, Ctrl+X)
-   
-   # Перезапусти backend
-   sudo supervisorctl restart backend
-   ```
+**📖 Подробная инструкция**: `/app/AVATAR_GENERATION_GUIDE.md`
+
+#### ✅ Что делает workflow:
+
+- Получает селфи пользователя
+- Генерирует 3D cartoon аватар (НЕ супергерой!)
+- Одежда зависит от ветки:
+  - **Power**: Спортивная (худи, джоггеры)
+  - **Stability**: Деловой casual (рубашка, чиносы)
+  - **Longevity**: Комфортный casual (футболка, джинсы)
+- Сохраняет черты лица из селфи
+- Отправляет результат в backend
 
 ## ✅ Проверка работоспособности
 
