@@ -35,14 +35,14 @@ export default function MenuModal({ isOpen, onClose, onItemClick }) {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={onClose}
-                className=\"p-2 rounded-xl bg-white/10\"
+                className="p-2 rounded-xl bg-white/10"
               >
                 <X size={24} />
               </motion.button>
             </div>
 
             {/* Menu Items */}
-            <div className=\"space-y-3\">
+            <div className="space-y-3">
               {MENU_ITEMS.map((item, index) => {
                 const Icon = item.icon;
                 return (
@@ -56,12 +56,12 @@ export default function MenuModal({ isOpen, onClose, onItemClick }) {
                       haptic.medium();
                       onItemClick(item.id);
                     }}
-                    className=\"w-full flex items-center space-x-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/10\"
+                    className="w-full flex items-center space-x-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all border border-white/10"
                   >
                     <div className={`${item.color}`}>
                       <Icon size={24} />
                     </div>
-                    <span className=\"text-lg font-medium\">{item.label}</span>
+                    <span className="text-lg font-medium">{item.label}</span>
                   </motion.button>
                 );
               })}
