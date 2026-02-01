@@ -71,7 +71,7 @@
      longevity: "healthy, agile, wearing green and emerald athletic gear"
    };
    
-   const prompt = `3D cartoon superhero character in Captain America style, ${branchStyles[branch]}, ${gender}, age ${age}, level ${level} hero, vibrant colors, heroic pose, white background, high quality render`;
+   const prompt = `3D cartoon hero character in disney + realism style, ${branchStyles[branch]}, ${gender}, age ${age}, level ${level} hero, vibrant colors, heroic pose, white background, high quality render`;
    
    return { prompt, ...$ input.item.json };
    ```
