@@ -161,9 +161,9 @@ async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
         }
         supabase.table('progress').update(progress_update).eq('user_id', user_id).execute()
         
-        # Trigger avatar generation via n8n webhook if URL is provided
+        # Trigger avatar generation via n8n webhook
         n8n_webhook = os.environ.get('N8N_WEBHOOK_URL')
-        if n8n_webhook and onboarding.selfie_url:
+        if n8n_webhook:
             try:
                 async with httpx.AsyncClient() as client:
                     await client.post(n8n_webhook, json={
@@ -174,7 +174,7 @@ async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
                         'gender': onboarding.gender,
                         'age': onboarding.age,
                         'level': 1
-                    }, timeout=5.0)
+                    }, timeout=10.0)
             except Exception as e:
                 logging.error(f"Error calling n8n webhook: {e}")
         
