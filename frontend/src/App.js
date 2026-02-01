@@ -98,10 +98,32 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0F0F23] to-[#1a1a2e] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">🦸</div>
-          <div className="text-white text-xl">Загрузка...</div>
+          <motion.div
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 5, -5, 0]
+            }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="text-8xl mb-6"
+          >
+            🦸
+          </motion.div>
+          <motion.div
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+            className="text-white text-2xl font-bold text-gaming"
+          >
+            ЗАГРУЗКА...
+          </motion.div>
+          <div className="mt-6 w-64 mx-auto progress-bar-thick">
+            <motion.div
+              className="progress-bar-fill"
+              animate={{ width: ["0%", "100%"] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            />
+          </div>
         </div>
       </div>
     );
