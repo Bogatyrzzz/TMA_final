@@ -206,6 +206,35 @@ async def get_user(tg_id: int):
         logging.error(f"Error getting user: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.delete("/users/{username}/delete-by-username")
+async def delete_user_by_username(username: str):
+    """Delete user by username (for testing purposes)"""
+    try:
+        # Find user by username
+        result = supabase.table('users').select('id, tg_id').eq('username', username).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = result.data[0]['id']
+        tg_id = result.data[0]['tg_id']
+        
+        # Delete user_quests
+        supabase.table('user_quests').delete().eq('user_id', user_id).execute()
+        
+        # Delete progress
+        supabase.table('progress').delete().eq('user_id', user_id).execute()
+        
+        # Delete user
+        supabase.table('users').delete().eq('id', user_id).execute()
+        
+        return {"success": True, "message": f"User @{username} (tg_id: {tg_id}) deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/users/{tg_id}/progress", response_model=Progress)
 async def get_progress(tg_id: int):
     """Get user progress"""
