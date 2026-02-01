@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronRight, Star, Crown } from 'lucide-react';
+import { Zap, ChevronRight, Star, Crown, CheckCircle2, Circle, Trophy } from 'lucide-react';
 import { haptic, showConfirm } from '../lib/telegram';
 import { api } from '../lib/api';
 import BottomNav from './BottomNav';
