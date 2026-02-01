@@ -60,7 +60,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
                 )}
                 
                 <motion.span
-                  className=\"text-[10px] mt-1 font-medium\"
+                  className="text-[10px] mt-1 font-medium"
                   animate={{
                     opacity: isActive ? 1 : 0.6,
                     color: isActive ? item.color : '#94a3b8',
