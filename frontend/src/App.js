@@ -53,6 +53,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
   const [initError, setInitError] = useState('');
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -72,9 +73,16 @@ function App() {
       // Check if onboarding is needed
       if (!userData.age || !userData.gender) {
         setShowOnboarding(true);
+        setIsGeneratingAvatar(false);
+      } else if (!userData.avatar_url) {
+        setShowOnboarding(false);
+        setIsGeneratingAvatar(true);
+        const progressData = await api.getProgress(telegramUser.id);
+        setProgress(progressData || defaultProgress);
       } else {
         const progressData = await api.getProgress(telegramUser.id);
         setProgress(progressData || defaultProgress);
+        setIsGeneratingAvatar(false);
       }
 
       haptic.light();
@@ -129,9 +137,37 @@ function App() {
       setUser(fallbackUser);
       setProgress(defaultProgress);
       setShowOnboarding(false);
+      setIsGeneratingAvatar(false);
       setLoading(false);
     }
   }, [backendUrl, initializeUser]);
+
+  useEffect(() => {
+    if (!tgUser || !user || showOnboarding || !isGeneratingAvatar) {
+      return undefined;
+    }
+    let isActive = true;
+    const interval = setInterval(async () => {
+      try {
+        const userData = await api.getUser(tgUser.id);
+        if (!isActive) {
+          return;
+        }
+        setUser(userData);
+        if (userData.avatar_url) {
+          const progressData = await api.getProgress(tgUser.id);
+          setProgress(progressData || defaultProgress);
+          setIsGeneratingAvatar(false);
+        }
+      } catch (error) {
+        console.error('Error polling avatar status:', error);
+      }
+    }, 4000);
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
+  }, [tgUser, user, showOnboarding, isGeneratingAvatar]);
 
   const handleOnboardingComplete = async (onboardingData) => {
     try {
@@ -147,6 +183,11 @@ function App() {
       setUser(userData);
       setProgress(progressData || defaultProgress);
       setShowOnboarding(false);
+      if (!userData.avatar_url) {
+        setIsGeneratingAvatar(true);
+      } else {
+        setIsGeneratingAvatar(false);
+      }
       
       haptic.success();
     } catch (error) {
@@ -226,6 +267,35 @@ function App() {
       <ErrorBoundary>
         <Onboarding onComplete={handleOnboardingComplete} />
       </ErrorBoundary>
+    );
+  }
+
+  if (isGeneratingAvatar) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            animate={{ scale: [1, 1.1, 1], rotate: [0, 3, -3, 0] }}
+            transition={{ repeat: Infinity, duration: 1.8 }}
+            className="text-7xl mb-6"
+          >
+            🧬
+          </motion.div>
+          <div className="text-white text-2xl font-bold text-gaming mb-3">
+            Генерируем твоего героя
+          </div>
+          <div className="text-slate-400 mb-6">
+            Осталось совсем чуть‑чуть
+          </div>
+          <div className="mt-2 w-72 mx-auto progress-bar-thick">
+            <motion.div
+              className="progress-bar-fill"
+              animate={{ width: ["0%", "100%"] }}
+              transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 

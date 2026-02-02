@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 import os
+import asyncio
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -218,6 +219,16 @@ async def register_user(user_data: UserCreate):
         logging.error(f"Error registering user: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+async def trigger_n8n_webhook(n8n_webhook: str, payload: dict, user_id: str, tg_id: int):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(n8n_webhook, json=payload, timeout=20.0)
+            logging.getLogger("lifequest").info(
+                f"n8n webhook {response.status_code} user_id={user_id} tg_id={tg_id}"
+            )
+    except Exception as e:
+        logging.error(f"Error calling n8n webhook: {e}")
+
 @api_router.post("/users/{tg_id}/onboarding")
 async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
     """Complete onboarding process"""
@@ -257,19 +268,18 @@ async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
         # Trigger avatar generation via n8n webhook
         n8n_webhook = os.environ.get('N8N_WEBHOOK_URL')
         if n8n_webhook:
-            try:
-                async with httpx.AsyncClient() as client:
-                    await client.post(n8n_webhook, json={
-                        'user_id': user_id,
-                        'tg_id': tg_id,
-                        'selfie_url': onboarding.selfie_url,
-                        'branch': onboarding.branch,
-                        'gender': onboarding.gender,
-                        'age': onboarding.age,
-                        'level': 1
-                    }, timeout=30.0)
-            except Exception as e:
-                logging.error(f"Error calling n8n webhook: {e}")
+            payload = {
+                'user_id': user_id,
+                'tg_id': tg_id,
+                'selfie_url': onboarding.selfie_url,
+                'branch': onboarding.branch,
+                'gender': onboarding.gender,
+                'age': onboarding.age,
+                'level': 1
+            }
+            asyncio.create_task(trigger_n8n_webhook(n8n_webhook, payload, user_id, tg_id))
+        else:
+            logging.getLogger("lifequest").warning("N8N_WEBHOOK_URL is not set")
         
         return {"success": True, "message": "Onboarding completed"}
         
