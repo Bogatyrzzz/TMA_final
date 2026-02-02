@@ -61,6 +61,16 @@ CREATE TABLE IF NOT EXISTS progress (
     UNIQUE(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS goals (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    goal_text TEXT,
+    goal_level INTEGER DEFAULT 10,
+    is_completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Quests table (templates)
 CREATE TABLE IF NOT EXISTS quests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -125,6 +135,7 @@ CREATE INDEX IF NOT EXISTS idx_users_tg_id ON users(tg_id);
 CREATE INDEX IF NOT EXISTS idx_progress_user_id ON progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_quests_user_id ON user_quests(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_quests_date ON user_quests(completion_date);
+CREATE INDEX IF NOT EXISTS idx_goals_user_id ON goals(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_avatar_generations_user_id ON avatar_generations(user_id);
 

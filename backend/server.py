@@ -89,6 +89,13 @@ class Progress(BaseModel):
     goal_level: int = 10
     goal_progress: int = 0
 
+class Goal(BaseModel):
+    id: str
+    goal_text: Optional[str] = None
+    goal_level: int = 10
+    is_completed: bool = False
+    created_at: Optional[str] = None
+
 class Quest(BaseModel):
     id: str
     title: str
@@ -103,6 +110,10 @@ class CompleteQuestRequest(BaseModel):
     quest_id: str
 
 class GoalUpdate(BaseModel):
+    goal_text: Optional[str] = None
+    goal_level: int = 10
+
+class GoalCreate(BaseModel):
     goal_text: Optional[str] = None
     goal_level: int = 10
 
@@ -224,6 +235,13 @@ async def complete_onboarding(tg_id: int, onboarding: OnboardingData):
             'updated_at': datetime.utcnow().isoformat()
         }
         supabase.table('progress').update(progress_update).eq('user_id', user_id).execute()
+
+        if onboarding.goal_text:
+            supabase.table('goals').insert({
+                'user_id': user_id,
+                'goal_text': onboarding.goal_text,
+                'goal_level': onboarding.goal_level
+            }).execute()
         
         # Trigger avatar generation via n8n webhook
         n8n_webhook = os.environ.get('N8N_WEBHOOK_URL')
@@ -322,6 +340,70 @@ async def get_progress(tg_id: int):
         raise
     except Exception as e:
         logging.error(f"Error getting progress: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/{tg_id}/goals", response_model=List[Goal])
+async def get_goals(tg_id: int):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        goals_result = supabase.table('goals').select('*').eq('user_id', user_id).order('created_at', desc=True).execute()
+        return goals_result.data or []
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting goals: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/users/{tg_id}/goals", response_model=Goal)
+async def create_goal(tg_id: int, goal: GoalCreate):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        insert_payload = {
+            'user_id': user_id,
+            'goal_text': goal.goal_text,
+            'goal_level': goal.goal_level
+        }
+        result = supabase.table('goals').insert(insert_payload).execute()
+        return result.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error creating goal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/users/{tg_id}/daily-xp")
+async def get_daily_xp(tg_id: int):
+    try:
+        user_result = supabase.table('users').select('id, active_branches').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user = user_result.data[0]
+        branches = user['active_branches']
+        quest_branches = branches + ['global']
+        quests_result = supabase.table('quests').select('title, xp_reward').in_('branch', quest_branches).eq('is_daily', True).execute()
+        quests = quests_result.data or []
+        bonus_quest = next((quest for quest in quests if quest.get('title') == BONUS_DAILY_TITLE), None)
+        daily_quests = [quest for quest in quests if quest.get('title') != BONUS_DAILY_TITLE]
+        daily_xp = sum(quest.get('xp_reward', 0) for quest in daily_quests)
+        bonus_xp = bonus_quest.get('xp_reward', 0) if bonus_quest else 0
+        return {
+            "daily_xp": daily_xp + bonus_xp,
+            "daily_quest_count": len(daily_quests),
+            "bonus_xp": bonus_xp
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error getting daily xp: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/users/{tg_id}/goal")
@@ -474,10 +556,12 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
 
         quest_branches = user['active_branches'] + ['global']
         all_quests_result = supabase.table('quests').select('*').in_('branch', quest_branches).eq('is_daily', True).execute()
-        bonus_quest = next((quest for quest in all_quests_result.data if quest.get('title') == BONUS_DAILY_TITLE), None)
-        daily_quest_ids = [quest['id'] for quest in all_quests_result.data if quest.get('title') != BONUS_DAILY_TITLE]
+        all_quests = all_quests_result.data or []
+        bonus_quest = next((quest for quest in all_quests if quest.get('title') == BONUS_DAILY_TITLE), None)
+        daily_quest_ids = [quest['id'] for quest in all_quests if quest.get('title') != BONUS_DAILY_TITLE]
         completed_today_result = supabase.table('user_quests').select('quest_id').eq('user_id', user_id).eq('completion_date', today).execute()
-        completed_today_ids = {quest['quest_id'] for quest in completed_today_result.data}
+        completed_today = completed_today_result.data or []
+        completed_today_ids = {quest['quest_id'] for quest in completed_today}
 
         if daily_quest_ids and all(quest_id in completed_today_ids for quest_id in daily_quest_ids) and bonus_quest:
             bonus_xp = bonus_quest.get('xp_reward', 0)

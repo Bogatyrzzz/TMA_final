@@ -27,9 +27,13 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   const [confirmQuest, setConfirmQuest] = useState(null);
   const [levelUpData, setLevelUpData] = useState(null);
   const [processingQuestId, setProcessingQuestId] = useState(null);
+  const [goals, setGoals] = useState([]);
   const [goalText, setGoalText] = useState('');
   const [goalLevel, setGoalLevel] = useState(10);
   const [savingGoal, setSavingGoal] = useState(false);
+  const [dailyXp, setDailyXp] = useState(0);
+  const [dailyQuestCount, setDailyQuestCount] = useState(0);
+  const [bonusDailyXp, setBonusDailyXp] = useState(0);
   const [bonusData, setBonusData] = useState(null);
   const safeProgress = progress || {
     current_level: 1,
@@ -41,14 +45,11 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   useEffect(() => {
     if (user) {
       loadQuests();
+      loadGoals();
+      loadDailyXp();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
-
-  useEffect(() => {
-    setGoalText(progress?.goal_text || '');
-    setGoalLevel(progress?.goal_level || 10);
-  }, [progress]);
 
   const loadQuests = async () => {
     try {
@@ -63,6 +64,24 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   };
 
   const getNextLevelXp = (level) => Math.floor(100 * Math.pow(1.05, level - 1));
+  const getTotalXpToLevel = (level) => {
+    let total = 0;
+    for (let current = 1; current < level; current += 1) {
+      total += getNextLevelXp(current);
+    }
+    return total;
+  };
+  const getCurrentTotalXp = () => {
+    return getTotalXpToLevel(safeProgress.current_level || 1) + (safeProgress.current_xp || 0);
+  };
+  const getGoalMetrics = (goalLevelValue) => {
+    const targetTotal = getTotalXpToLevel(goalLevelValue || 1);
+    const currentTotal = getCurrentTotalXp();
+    const remaining = Math.max(0, targetTotal - currentTotal);
+    const percent = targetTotal > 0 ? Math.min(100, (currentTotal / targetTotal) * 100) : 100;
+    const days = dailyXp > 0 ? Math.ceil(remaining / dailyXp) : null;
+    return { percent, remaining, days };
+  };
 
   const applyXpGain = (currentProgress, xpGain) => {
     const baseProgress = currentProgress || {
@@ -156,21 +175,45 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
     }
     setSavingGoal(true);
     try {
-      const result = await api.updateGoal(user.tg_id, {
+      await api.createGoal(user.tg_id, {
         goal_text: goalText,
         goal_level: goalLevel,
       });
-      if (result?.progress && onProgressUpdate) {
-        onProgressUpdate(result.progress);
-      } else {
-        onRefresh();
-      }
+      setGoalText('');
+      setGoalLevel(10);
+      await loadGoals();
       haptic.success();
     } catch (error) {
       haptic.error();
-      console.error('Error updating goal:', error);
+      console.error('Error creating goal:', error);
     } finally {
       setSavingGoal(false);
+    }
+  };
+
+  const loadGoals = async () => {
+    try {
+      if (!user?.tg_id) {
+        return;
+      }
+      const data = await api.getGoals(user.tg_id);
+      setGoals(data);
+    } catch (error) {
+      console.error('Error loading goals:', error);
+    }
+  };
+
+  const loadDailyXp = async () => {
+    try {
+      if (!user?.tg_id) {
+        return;
+      }
+      const data = await api.getDailyXp(user.tg_id);
+      setDailyXp(data?.daily_xp || 0);
+      setDailyQuestCount(data?.daily_quest_count || 0);
+      setBonusDailyXp(data?.bonus_xp || 0);
+    } catch (error) {
+      console.error('Error loading daily xp:', error);
     }
   };
   
@@ -402,32 +445,57 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-gaming">ЦЕЛИ</h2>
               <div className="glass rounded-full px-4 py-2">
-                <span className="text-sm text-slate-400">
-                  {safeProgress.goal_progress || 0}%
+                <span className="text-xs text-slate-400">
+                  {dailyXp > 0 ? `${dailyXp} XP/день` : 'XP/день'}
                 </span>
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl p-6 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-indigo-900/40">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-3xl" />
-              <div className="relative space-y-4">
-                <div className="text-sm uppercase tracking-widest text-cyan-300/70">Текущая цель</div>
-                <div className="text-2xl font-bold text-white">
-                  {safeProgress.goal_text || 'Добавь цель, чтобы начать путь'}
+            <div className="glass rounded-2xl p-4 border border-white/10 flex flex-wrap gap-3 text-xs text-slate-400">
+              <span className="px-3 py-1 rounded-full bg-white/5">Квестов в день: {dailyQuestCount}</span>
+              <span className="px-3 py-1 rounded-full bg-white/5">Бонус: {bonusDailyXp} XP</span>
+            </div>
+
+            <div className="space-y-4">
+              {goals.length === 0 && (
+                <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-6 text-center text-slate-400">
+                  Цели пока не добавлены
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-400">
-                  <span>Целевой уровень</span>
-                  <span className="text-cyan-300 font-semibold">{safeProgress.goal_level || 10}</span>
-                </div>
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+              )}
+              {goals.map((goal, index) => {
+                const metrics = getGoalMetrics(goal.goal_level);
+                return (
                   <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${safeProgress.goal_progress || 0}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
+                    key={goal.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                    className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950/60 p-6"
+                  >
+                    <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-cyan-400/10 blur-3xl" />
+                    <div className="relative space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-lg font-bold text-white">{goal.goal_text || 'Новая цель'}</div>
+                        <div className="text-sm text-cyan-300 font-semibold">Уровень {goal.goal_level}</div>
+                      </div>
+                      <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${metrics.percent}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span>{Math.round(metrics.percent)}% прогресса</span>
+                        <span>
+                          {metrics.days === null ? 'нужны данные' : `≈ ${metrics.days} дней`}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
             <div className="glass rounded-3xl p-6 border border-white/10 space-y-5">
