@@ -17,7 +17,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Configuration
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-WEB_APP_URL = os.environ.get('WEB_APP_URL', 'https://quest-hero-3.preview.emergentagent.com')
+WEB_APP_URL = os.environ.get('WEB_APP_URL')
 
 supabase = get_supabase()
 
@@ -32,6 +32,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /start command"""
     user = update.effective_user
     
+    if not WEB_APP_URL:
+        await update.message.reply_text("WEB_APP_URL не настроен")
+        return
+
     # Create inline keyboard with Mini App
     keyboard = [
         [InlineKeyboardButton(

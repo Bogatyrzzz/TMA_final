@@ -1,17 +1,25 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Header
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
 import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, date
+from time import perf_counter
 import httpx
 from supabase_client import get_supabase
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 supabase = get_supabase()
 
@@ -20,6 +28,22 @@ app = FastAPI(title="LifeQuest Hero API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+REQUEST_COUNT = 0
+ERROR_COUNT = 0
+START_TIME = datetime.utcnow()
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    global REQUEST_COUNT, ERROR_COUNT
+    start_time = perf_counter()
+    response = await call_next(request)
+    duration = perf_counter() - start_time
+    REQUEST_COUNT += 1
+    if response.status_code >= 500:
+        ERROR_COUNT += 1
+    logging.getLogger("lifequest").info(f"{request.method} {request.url.path} {response.status_code} {duration:.3f}")
+    return response
 
 # Models
 class UserCreate(BaseModel):
@@ -86,6 +110,27 @@ class AvatarGenerationRequest(BaseModel):
 @api_router.get("/")
 async def root():
     return {"message": "LifeQuest Hero API v1.0", "status": "ready"}
+
+@api_router.get("/health")
+async def health():
+    uptime_seconds = int((datetime.utcnow() - START_TIME).total_seconds())
+    return {"status": "ok", "uptime_seconds": uptime_seconds, "timestamp": datetime.utcnow().isoformat()}
+
+@api_router.get("/ready")
+async def ready():
+    try:
+        supabase.table('users').select('id').limit(1).execute()
+        return {"status": "ok"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="not ready")
+
+@api_router.get("/metrics")
+async def metrics():
+    return {
+        "requests_total": REQUEST_COUNT,
+        "errors_total": ERROR_COUNT,
+        "uptime_seconds": int((datetime.utcnow() - START_TIME).total_seconds())
+    }
 
 @api_router.post("/users/register", response_model=User)
 async def register_user(user_data: UserCreate):
@@ -479,10 +524,4 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("lifequest")

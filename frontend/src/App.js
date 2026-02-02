@@ -56,6 +56,30 @@ function App() {
       haptic.light();
     } catch (error) {
       console.error('Error initializing user:', error);
+      const fallbackUser = {
+        tg_id: telegramUser.id,
+        first_name: telegramUser.first_name || 'Test',
+        last_name: telegramUser.last_name || 'User',
+        username: telegramUser.username || 'testuser',
+        language_code: telegramUser.language_code || 'ru',
+        avatar_url: '',
+        is_pro: false,
+        active_branches: ['power'],
+        strength: 2,
+        health: 2,
+        intellect: 2,
+        agility: 2,
+        confidence: 2,
+        stability: 2,
+      };
+      const fallbackProgress = {
+        current_level: 1,
+        current_xp: 10,
+        next_level_xp: 100,
+      };
+      setUser(fallbackUser);
+      setProgress(fallbackProgress);
+      setShowOnboarding(false);
     } finally {
       setLoading(false);
     }
