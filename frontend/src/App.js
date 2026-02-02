@@ -154,6 +154,22 @@ function App() {
     );
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-3xl font-bold">Ошибка загрузки</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition"
+          >
+            Обновить страницу
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (showOnboarding) {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }

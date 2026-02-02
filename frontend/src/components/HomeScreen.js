@@ -26,9 +26,17 @@ export default function HomeScreen({ user, progress, onRefresh }) {
   const [showMenu, setShowMenu] = useState(false);
   const [confirmQuest, setConfirmQuest] = useState(null);
   const [levelUpData, setLevelUpData] = useState(null);
+  const safeProgress = progress || {
+    current_level: 1,
+    current_xp: 0,
+    next_level_xp: 100,
+    total_xp: 0,
+  };
 
   useEffect(() => {
-    loadQuests();
+    if (user) {
+      loadQuests();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -75,7 +83,17 @@ export default function HomeScreen({ user, progress, onRefresh }) {
     }
   };
 
-  const xpPercentage = (progress.current_xp / progress.next_level_xp) * 100;
+  if (!user || !progress) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-3xl font-bold">Загрузка данных...</div>
+        </div>
+      </div>
+    );
+  }
+
+  const xpPercentage = (safeProgress.current_xp / safeProgress.next_level_xp) * 100;
   const completedDaily = quests.filter(q => q.is_daily && q.is_completed).length;
   const totalDaily = quests.filter(q => q.is_daily).length;
 
@@ -115,7 +133,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                 className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center relative z-20 shadow-[0_0_15px_rgba(139,92,246,0.6)] bg-gradient-to-br from-[#6366f1] to-[#a855f7] border-4 border-[#0F0F23]"
               >
                 <span className="text-white font-black text-xl leading-none">
-                  {progress.current_level}
+                  {safeProgress.current_level}
                 </span>
                 
                 {/* PRO Crown Badge */}
@@ -132,7 +150,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    {progress.current_xp}/{progress.next_level_xp}
+                    {safeProgress.current_xp}/{safeProgress.next_level_xp}
                   </span>
                 </div>
                 
@@ -298,11 +316,11 @@ export default function HomeScreen({ user, progress, onRefresh }) {
               <div className="space-y-3">
                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
                   <span className="text-slate-400">Уровень</span>
-                  <span className="font-bold text-[#FF6B35]">{progress.current_level}</span>
+                  <span className="font-bold text-[#FF6B35]">{safeProgress.current_level}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
                   <span className="text-slate-400">Всего XP</span>
-                  <span className="font-bold text-[#4ECDC4]">{progress.total_xp}</span>
+                  <span className="font-bold text-[#4ECDC4]">{safeProgress.total_xp}</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
                   <span className="text-slate-400">Ветка</span>
