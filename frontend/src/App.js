@@ -70,7 +70,7 @@ function App() {
       setUser(userData);
 
       // Check if onboarding is needed
-      if (!userData.age || !userData.avatar_url) {
+      if (!userData.age || !userData.gender) {
         setShowOnboarding(true);
       } else {
         const progressData = await api.getProgress(telegramUser.id);

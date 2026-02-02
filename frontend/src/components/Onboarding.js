@@ -178,6 +178,17 @@ export default function Onboarding({ onComplete }) {
                   </motion.div>
                 </RadioGroup>
               </div>
+
+              <div className="glass rounded-2xl p-6 border border-white/10">
+                <label className="text-lg font-medium text-slate-300 block mb-4">Селфи (ссылка)</label>
+                <Input
+                  placeholder="https://... (опционально)"
+                  value={formData.selfie_url || ''}
+                  onChange={(e) => setFormData({ ...formData, selfie_url: e.target.value })}
+                  className="py-5 text-lg bg-slate-900/50 border-slate-700 rounded-xl focus:border-[#4ECDC4] transition-all"
+                  data-testid="selfie-input"
+                />
+              </div>
             </div>
 
             <motion.button
