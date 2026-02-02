@@ -77,4 +77,4 @@
 
 ## Тестовые данные
 - Test user: tg_id=123456789
-- API URL: https://quest-hero-3.preview.emergentagent.com
+- API URL: https://your-backend-url

@@ -33,7 +33,7 @@
   },
   "test_credentials": {
     "test_user_tg_id": 123456789,
-    "api_url": "https://quest-hero-3.preview.emergentagent.com"
+    "api_url": "https://your-backend-url"
   },
   "seed_data_creation": "Used existing test user with tg_id=123456789",
   "retest_needed": false,

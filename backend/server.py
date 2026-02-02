@@ -52,6 +52,7 @@ class UserCreate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     language_code: str = 'en'
+    avatar_url: Optional[str] = None
 
 class OnboardingData(BaseModel):
     age: Optional[int] = None
@@ -140,9 +141,19 @@ async def register_user(user_data: UserCreate):
         result = supabase.table('users').select('*').eq('tg_id', user_data.tg_id).execute()
         
         if result.data and len(result.data) > 0:
-            # User exists, return it
-            return result.data[0]
+            existing_user = result.data[0]
+            avatar_url = existing_user.get('avatar_url')
+            if avatar_url and "supabase" not in avatar_url:
+                supabase.table('users').update({
+                    'avatar_url': None,
+                    'updated_at': datetime.utcnow().isoformat()
+                }).eq('id', existing_user['id']).execute()
+                existing_user['avatar_url'] = None
+            return existing_user
         
+        incoming_avatar_url = user_data.avatar_url
+        sanitized_avatar_url = incoming_avatar_url if incoming_avatar_url and "supabase" in incoming_avatar_url else None
+
         # Create new user
         new_user = {
             'tg_id': user_data.tg_id,
@@ -150,6 +161,7 @@ async def register_user(user_data: UserCreate):
             'first_name': user_data.first_name,
             'last_name': user_data.last_name,
             'language_code': user_data.language_code,
+            'avatar_url': sanitized_avatar_url,
             'active_branches': ['power'],
             'is_pro': False,
             'strength': 1,

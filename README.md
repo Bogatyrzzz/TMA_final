@@ -53,7 +53,7 @@ LifeQuest Hero - это Telegram Mini App для геймификации реа
 3. Выбери своего бота
 4. Выбери тип: **web_app**
 5. Введи название: **LifeQuest Hero**
-6. Введи URL: `https://quest-hero-3.preview.emergentagent.com`
+6. Введи URL: `https://your-backend-url`
 
 ### Шаг 3: Настройка n8n для генерации аватаров
 
