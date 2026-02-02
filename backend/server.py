@@ -94,6 +94,10 @@ class Goal(BaseModel):
     goal_text: Optional[str] = None
     goal_level: int = 10
     is_completed: bool = False
+    completed_at: Optional[str] = None
+    notified_at: Optional[str] = None
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: Optional[str] = None
 
 class Quest(BaseModel):
@@ -112,10 +116,17 @@ class CompleteQuestRequest(BaseModel):
 class GoalUpdate(BaseModel):
     goal_text: Optional[str] = None
     goal_level: int = 10
+    is_completed: Optional[bool] = None
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
+    completed_at: Optional[str] = None
+    notified_at: Optional[str] = None
 
 class GoalCreate(BaseModel):
     goal_text: Optional[str] = None
     goal_level: int = 10
+    notes: Optional[str] = None
+    image_url: Optional[str] = None
 
 class AvatarGenerationRequest(BaseModel):
     user_id: str
@@ -369,7 +380,9 @@ async def create_goal(tg_id: int, goal: GoalCreate):
         insert_payload = {
             'user_id': user_id,
             'goal_text': goal.goal_text,
-            'goal_level': goal.goal_level
+            'goal_level': goal.goal_level,
+            'notes': goal.notes,
+            'image_url': goal.image_url
         }
         result = supabase.table('goals').insert(insert_payload).execute()
         return result.data[0]
@@ -377,6 +390,93 @@ async def create_goal(tg_id: int, goal: GoalCreate):
         raise
     except Exception as e:
         logging.error(f"Error creating goal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.patch("/users/{tg_id}/goals/{goal_id}", response_model=Goal)
+async def update_goal(tg_id: int, goal_id: str, goal: GoalUpdate):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        update_payload = {
+            'goal_text': goal.goal_text,
+            'goal_level': goal.goal_level,
+            'is_completed': goal.is_completed,
+            'notes': goal.notes,
+            'image_url': goal.image_url,
+            'completed_at': goal.completed_at,
+            'notified_at': goal.notified_at,
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        update_payload = {key: value for key, value in update_payload.items() if value is not None}
+        
+        result = supabase.table('goals').update(update_payload).eq('id', goal_id).eq('user_id', user_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        return result.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating goal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/users/{tg_id}/goals/{goal_id}/complete", response_model=Goal)
+async def complete_goal(tg_id: int, goal_id: str):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        now = datetime.utcnow().isoformat()
+        result = supabase.table('goals').update({
+            'is_completed': True,
+            'completed_at': now,
+            'updated_at': now
+        }).eq('id', goal_id).eq('user_id', user_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        return result.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error completing goal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def send_goal_achieved_notification(tg_id: int, goal_text: str, level: int):
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    if not token:
+        logging.warning("TELEGRAM_BOT_TOKEN not set")
+        return
+    message = f"🎁 Ты достиг уровня {level} и заслужил: {goal_text}"
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    async with httpx.AsyncClient() as client:
+        await client.post(url, json={"chat_id": tg_id, "text": message}, timeout=10.0)
+
+@api_router.post("/users/{tg_id}/goals/{goal_id}/notify")
+async def notify_goal(tg_id: int, goal_id: str):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        goal_result = supabase.table('goals').select('*').eq('id', goal_id).eq('user_id', user_id).execute()
+        if not goal_result.data:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        
+        goal = goal_result.data[0]
+        await send_goal_achieved_notification(tg_id, goal.get('goal_text') or 'Цель', goal.get('goal_level') or 1)
+        supabase.table('goals').update({
+            'notified_at': datetime.utcnow().isoformat()
+        }).eq('id', goal_id).execute()
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error sending goal notification: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/users/{tg_id}/daily-xp")
@@ -610,6 +710,23 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
                             except Exception as e:
                                 logging.error(f"Error calling n8n webhook for avatar: {e}")
         
+        effective_level = max(new_level, bonus_new_level or new_level)
+        goals_result = supabase.table('goals').select('*').eq('user_id', user_id).eq('is_completed', False).execute()
+        goals_data = goals_result.data or []
+        achieved_goals = [
+            goal for goal in goals_data
+            if (goal.get('goal_level') or 1) <= effective_level and goal.get('notified_at') is None
+        ]
+
+        for goal in achieved_goals:
+            try:
+                await send_goal_achieved_notification(tg_id, goal.get('goal_text') or 'Цель', effective_level)
+                supabase.table('goals').update({
+                    'notified_at': datetime.utcnow().isoformat()
+                }).eq('id', goal['id']).execute()
+            except Exception as e:
+                logging.error(f"Error sending goal achieved notification: {e}")
+
         return {
             "success": True,
             "xp_gained": xp_reward,
@@ -618,7 +735,8 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
             "bonus_awarded": bonus_awarded,
             "bonus_xp": bonus_xp,
             "bonus_leveled_up": bonus_leveled_up,
-            "bonus_new_level": bonus_new_level
+            "bonus_new_level": bonus_new_level,
+            "achieved_goals": achieved_goals
         }
         
     except HTTPException:

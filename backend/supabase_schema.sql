@@ -67,6 +67,10 @@ CREATE TABLE IF NOT EXISTS goals (
     goal_text TEXT,
     goal_level INTEGER DEFAULT 10,
     is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    notified_at TIMESTAMP WITH TIME ZONE,
+    notes TEXT,
+    image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -44,6 +44,14 @@ export const api = {
     const response = await getClient().post(`/users/${tgId}/goals`, data);
     return response.data;
   },
+  updateGoal: async (tgId, goalId, data) => {
+    const response = await getClient().patch(`/users/${tgId}/goals/${goalId}`, data);
+    return response.data;
+  },
+  completeGoal: async (tgId, goalId) => {
+    const response = await getClient().post(`/users/${tgId}/goals/${goalId}/complete`);
+    return response.data;
+  },
   getDailyXp: async (tgId) => {
     const response = await getClient().get(`/users/${tgId}/daily-xp`);
     return response.data;
