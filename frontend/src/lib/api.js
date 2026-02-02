@@ -7,38 +7,44 @@ const getApiBase = () => {
   }
   return `${BACKEND_URL}/api`;
 };
+const getClient = () => axios.create({
+  baseURL: getApiBase(),
+  headers: {
+    'ngrok-skip-browser-warning': 'true',
+  },
+});
 
 export const api = {
   // User endpoints
   registerUser: async (userData) => {
-    const response = await axios.post(`${getApiBase()}/users/register`, userData);
+    const response = await getClient().post('/users/register', userData);
     return response.data;
   },
 
   getUser: async (tgId) => {
-    const response = await axios.get(`${getApiBase()}/users/${tgId}`);
+    const response = await getClient().get(`/users/${tgId}`);
     return response.data;
   },
 
   completeOnboarding: async (tgId, data) => {
-    const response = await axios.post(`${getApiBase()}/users/${tgId}/onboarding`, data);
+    const response = await getClient().post(`/users/${tgId}/onboarding`, data);
     return response.data;
   },
 
   // Progress endpoints
   getProgress: async (tgId) => {
-    const response = await axios.get(`${getApiBase()}/users/${tgId}/progress`);
+    const response = await getClient().get(`/users/${tgId}/progress`);
     return response.data;
   },
 
   // Quest endpoints
   getQuests: async (tgId) => {
-    const response = await axios.get(`${getApiBase()}/users/${tgId}/quests`);
+    const response = await getClient().get(`/users/${tgId}/quests`);
     return response.data;
   },
 
   completeQuest: async (tgId, questId) => {
-    const response = await axios.post(`${getApiBase()}/users/${tgId}/quests/complete`, {
+    const response = await getClient().post(`/users/${tgId}/quests/complete`, {
       quest_id: questId,
     });
     return response.data;
@@ -46,12 +52,12 @@ export const api = {
 
   // PRO endpoints
   activatePro: async (tgId) => {
-    const response = await axios.post(`${getApiBase()}/users/${tgId}/pro/activate`);
+    const response = await getClient().post(`/users/${tgId}/pro/activate`);
     return response.data;
   },
 
   addBranch: async (tgId, branch) => {
-    const response = await axios.post(`${getApiBase()}/users/${tgId}/branches/add`, branch);
+    const response = await getClient().post(`/users/${tgId}/branches/add`, branch);
     return response.data;
   },
 };
