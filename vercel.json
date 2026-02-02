@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "env": {
+    "REACT_APP_BACKEND_URL": "https://danita-geodic-noncompliantly.ngrok-free.dev"
+  },
   "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "frontend/build",
   "routes": [

@@ -53,6 +53,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [initError, setInitError] = useState('');
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   const initializeUser = React.useCallback(async (telegramUser) => {
     try {
@@ -78,24 +80,9 @@ function App() {
       haptic.light();
     } catch (error) {
       console.error('Error initializing user:', error);
-      const fallbackUser = {
-        tg_id: telegramUser.id,
-        first_name: telegramUser.first_name || 'Test',
-        last_name: telegramUser.last_name || 'User',
-        username: telegramUser.username || 'testuser',
-        language_code: telegramUser.language_code || 'ru',
-        avatar_url: '',
-        is_pro: false,
-        active_branches: ['power'],
-        strength: 2,
-        health: 2,
-        intellect: 2,
-        agility: 2,
-        confidence: 2,
-        stability: 2,
-      };
-      setUser(fallbackUser);
-      setProgress(defaultProgress);
+      setInitError('Не удалось подключиться к backend');
+      setUser(null);
+      setProgress(null);
       setShowOnboarding(false);
     } finally {
       setLoading(false);
@@ -103,6 +90,11 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!backendUrl) {
+      setInitError('REACT_APP_BACKEND_URL не задан');
+      setLoading(false);
+      return;
+    }
     try {
       initTelegram();
       const telegramUser = getTelegramUser();
@@ -139,7 +131,7 @@ function App() {
       setShowOnboarding(false);
       setLoading(false);
     }
-  }, [initializeUser]);
+  }, [backendUrl, initializeUser]);
 
   const handleOnboardingComplete = async (onboardingData) => {
     try {
@@ -215,6 +207,9 @@ function App() {
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-3xl font-bold">Ошибка загрузки</div>
+          {initError && (
+            <div className="text-sm text-slate-400">{initError}</div>
+          )}
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition"
