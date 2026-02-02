@@ -232,7 +232,7 @@ function App() {
   return (
     <div className="App">
       <ErrorBoundary>
-        <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} />
+        <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} onProgressUpdate={setProgress} />
       </ErrorBoundary>
     </div>
   );

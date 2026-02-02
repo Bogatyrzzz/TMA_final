@@ -32,6 +32,7 @@ api_router = APIRouter(prefix="/api")
 REQUEST_COUNT = 0
 ERROR_COUNT = 0
 START_TIME = datetime.utcnow()
+BONUS_DAILY_TITLE = "⭐ Выполни все daily квесты"
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -100,6 +101,10 @@ class Quest(BaseModel):
 
 class CompleteQuestRequest(BaseModel):
     quest_id: str
+
+class GoalUpdate(BaseModel):
+    goal_text: Optional[str] = None
+    goal_level: int = 10
 
 class AvatarGenerationRequest(BaseModel):
     user_id: str
@@ -319,9 +324,39 @@ async def get_progress(tg_id: int):
         logging.error(f"Error getting progress: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/users/{tg_id}/goal")
+async def update_goal(tg_id: int, goal: GoalUpdate):
+    try:
+        user_result = supabase.table('users').select('id').eq('tg_id', tg_id).execute()
+        if not user_result.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_id = user_result.data[0]['id']
+        update_payload = {
+            'goal_text': goal.goal_text,
+            'goal_level': goal.goal_level,
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        supabase.table('progress').update(update_payload).eq('user_id', user_id).execute()
+        
+        progress_result = supabase.table('progress').select('*').eq('user_id', user_id).execute()
+        if not progress_result.data:
+            raise HTTPException(status_code=404, detail="Progress not found")
+        
+        progress = progress_result.data[0]
+        progress['goal_progress'] = int((progress['current_level'] / progress.get('goal_level', 10)) * 100)
+        
+        return {"success": True, "progress": progress}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating goal: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/users/{tg_id}/quests", response_model=List[Quest])
 async def get_quests(tg_id: int):
     """Get quests for user based on their active branches"""
+    start_time = perf_counter()
     try:
         # Get user and their branches
         user_result = supabase.table('users').select('id, active_branches').eq('tg_id', tg_id).execute()
@@ -335,6 +370,7 @@ async def get_quests(tg_id: int):
         # Get quests for user's branches + global
         quest_branches = branches + ['global']
         quests_result = supabase.table('quests').select('*').in_('branch', quest_branches).eq('is_daily', True).execute()
+        filtered_quests = [quest for quest in quests_result.data if quest.get('title') != BONUS_DAILY_TITLE]
         
         # Get completed quests for today
         today = date.today().isoformat()
@@ -343,7 +379,7 @@ async def get_quests(tg_id: int):
         
         # Mark completed quests
         quests = []
-        for quest in quests_result.data:
+        for quest in filtered_quests:
             quest['is_completed'] = quest['id'] in completed_quest_ids
             quests.append(quest)
         
@@ -353,10 +389,14 @@ async def get_quests(tg_id: int):
     except Exception as e:
         logging.error(f"Error getting quests: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        duration = perf_counter() - start_time
+        logging.getLogger("lifequest").info(f"get_quests {tg_id} {duration:.3f}")
 
 @api_router.post("/users/{tg_id}/quests/complete")
 async def complete_quest(tg_id: int, request: CompleteQuestRequest):
     """Complete a quest and award XP"""
+    start_time = perf_counter()
     try:
         # Get user
         user_result = supabase.table('users').select('id, active_branches').eq('tg_id', tg_id).execute()
@@ -398,6 +438,10 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
         level_up_data = result.data[0] if result.data else None
         leveled_up = level_up_data['leveled_up'] if level_up_data else False
         new_level = level_up_data['new_level'] if level_up_data else 1
+        bonus_awarded = False
+        bonus_xp = 0
+        bonus_leveled_up = False
+        bonus_new_level = None
         
         # If leveled up, update stats
         if leveled_up:
@@ -427,12 +471,70 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
                             }, timeout=5.0)
                     except Exception as e:
                         logging.error(f"Error calling n8n webhook for avatar: {e}")
+
+        quest_branches = user['active_branches'] + ['global']
+        all_quests_result = supabase.table('quests').select('*').in_('branch', quest_branches).eq('is_daily', True).execute()
+        bonus_quest = next((quest for quest in all_quests_result.data if quest.get('title') == BONUS_DAILY_TITLE), None)
+        daily_quest_ids = [quest['id'] for quest in all_quests_result.data if quest.get('title') != BONUS_DAILY_TITLE]
+        completed_today_result = supabase.table('user_quests').select('quest_id').eq('user_id', user_id).eq('completion_date', today).execute()
+        completed_today_ids = {quest['quest_id'] for quest in completed_today_result.data}
+
+        if daily_quest_ids and all(quest_id in completed_today_ids for quest_id in daily_quest_ids) and bonus_quest:
+            bonus_xp = bonus_quest.get('xp_reward', 0)
+            bonus_quest_id = bonus_quest['id']
+            bonus_check = supabase.table('user_quests').select('id').eq('user_id', user_id).eq('quest_id', bonus_quest_id).eq('completion_date', today).execute()
+            if not bonus_check.data:
+                supabase.table('user_quests').insert({
+                    'user_id': user_id,
+                    'quest_id': bonus_quest_id,
+                    'completion_date': today,
+                    'is_today': True
+                }).execute()
+                bonus_result = supabase.rpc('add_xp_and_check_level', {
+                    'p_user_id': user_id,
+                    'p_xp_amount': bonus_xp
+                }).execute()
+                bonus_level_up_data = bonus_result.data[0] if bonus_result.data else None
+                bonus_leveled_up = bonus_level_up_data['leveled_up'] if bonus_level_up_data else False
+                bonus_new_level = bonus_level_up_data['new_level'] if bonus_level_up_data else None
+                bonus_awarded = True
+
+                if bonus_leveled_up:
+                    branches = user['active_branches']
+                    supabase.rpc('update_stats_on_levelup', {
+                        'p_user_id': user_id,
+                        'p_branches': branches
+                    }).execute()
+                    
+                    if bonus_new_level and bonus_new_level % 5 == 0:
+                        n8n_webhook = os.environ.get('N8N_WEBHOOK_URL')
+                        if n8n_webhook:
+                            try:
+                                user_full = supabase.table('users').select('*').eq('id', user_id).execute()
+                                user_data = user_full.data[0] if user_full.data else {}
+                                
+                                async with httpx.AsyncClient() as client:
+                                    await client.post(n8n_webhook, json={
+                                        'user_id': user_id,
+                                        'tg_id': tg_id,
+                                        'selfie_url': user_data.get('selfie_url'),
+                                        'branch': branches[0] if branches else 'power',
+                                        'gender': user_data.get('gender'),
+                                        'age': user_data.get('age'),
+                                        'level': bonus_new_level
+                                    }, timeout=5.0)
+                            except Exception as e:
+                                logging.error(f"Error calling n8n webhook for avatar: {e}")
         
         return {
             "success": True,
             "xp_gained": xp_reward,
             "leveled_up": leveled_up,
-            "new_level": new_level
+            "new_level": new_level,
+            "bonus_awarded": bonus_awarded,
+            "bonus_xp": bonus_xp,
+            "bonus_leveled_up": bonus_leveled_up,
+            "bonus_new_level": bonus_new_level
         }
         
     except HTTPException:
@@ -440,6 +542,9 @@ async def complete_quest(tg_id: int, request: CompleteQuestRequest):
     except Exception as e:
         logging.error(f"Error completing quest: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        duration = perf_counter() - start_time
+        logging.getLogger("lifequest").info(f"complete_quest {tg_id} {request.quest_id} {duration:.3f}")
 
 @api_router.post("/webhooks/avatar-generated")
 async def avatar_generated_webhook(data: dict):

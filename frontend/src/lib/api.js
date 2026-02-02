@@ -36,6 +36,10 @@ export const api = {
     const response = await getClient().get(`/users/${tgId}/progress`);
     return response.data;
   },
+  updateGoal: async (tgId, data) => {
+    const response = await getClient().post(`/users/${tgId}/goal`, data);
+    return response.data;
+  },
 
   // Quest endpoints
   getQuests: async (tgId) => {

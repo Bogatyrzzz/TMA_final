@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Target, User, Sparkles } from 'lucide-react';
+import { Home, Target, User, Sparkles, Flag } from 'lucide-react';
 import { haptic } from '../lib/telegram';
 
 export default function BottomNav({ activeTab, onTabChange }) {
   const navItems = [
     { id: 'quests', icon: Target, size: 24 },
+    { id: 'goals', icon: Flag, size: 24 },
     { id: 'home', icon: Home, size: 32, isCenter: true },
     { id: 'profile', icon: User, size: 24 },
     { id: 'sage', icon: Sparkles, size: 24, disabled: true },

@@ -7,6 +7,7 @@ import BottomNav from './BottomNav';
 import MenuModal from './MenuModal';
 import QuestConfirmModal from './QuestConfirmModal';
 import LevelUpModal from './LevelUpModal';
+import { Slider } from './ui/slider';
 
 // Compact Stats Config - only icons
 const STATS = [
@@ -18,14 +19,18 @@ const STATS = [
   { key: 'stability', icon: '🧘', color: 'text-cyan-400' },
 ];
 
-export default function HomeScreen({ user, progress, onRefresh }) {
+export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate }) {
   const [quests, setQuests] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
   const [showMenu, setShowMenu] = useState(false);
   const [confirmQuest, setConfirmQuest] = useState(null);
   const [levelUpData, setLevelUpData] = useState(null);
+  const [processingQuestId, setProcessingQuestId] = useState(null);
+  const [goalText, setGoalText] = useState('');
+  const [goalLevel, setGoalLevel] = useState(10);
+  const [savingGoal, setSavingGoal] = useState(false);
+  const [bonusData, setBonusData] = useState(null);
   const safeProgress = progress || {
     current_level: 1,
     current_xp: 0,
@@ -40,6 +45,11 @@ export default function HomeScreen({ user, progress, onRefresh }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  useEffect(() => {
+    setGoalText(progress?.goal_text || '');
+    setGoalLevel(progress?.goal_level || 10);
+  }, [progress]);
+
   const loadQuests = async () => {
     try {
       if (!user?.tg_id) {
@@ -52,28 +62,115 @@ export default function HomeScreen({ user, progress, onRefresh }) {
     }
   };
 
+  const getNextLevelXp = (level) => Math.floor(100 * Math.pow(1.05, level - 1));
+
+  const applyXpGain = (currentProgress, xpGain) => {
+    const baseProgress = currentProgress || {
+      current_level: 1,
+      current_xp: 0,
+      next_level_xp: 100,
+      total_xp: 0,
+      goal_text: null,
+      goal_level: 10,
+      goal_progress: 0,
+    };
+
+    let newLevel = baseProgress.current_level || 1;
+    let nextLevelXp = baseProgress.next_level_xp || getNextLevelXp(newLevel);
+    let currentXp = (baseProgress.current_xp || 0) + xpGain;
+
+    while (currentXp >= nextLevelXp) {
+      currentXp -= nextLevelXp;
+      newLevel += 1;
+      nextLevelXp = getNextLevelXp(newLevel);
+    }
+
+    return {
+      ...baseProgress,
+      current_level: newLevel,
+      current_xp: currentXp,
+      next_level_xp: nextLevelXp,
+      total_xp: (baseProgress.total_xp || 0) + xpGain,
+    };
+  };
+
   const handleCompleteQuest = async (questId) => {
-    setLoading(true);
+    if (processingQuestId) {
+      return;
+    }
+
+    const targetQuest = quests.find((quest) => quest.id === questId);
+    if (!targetQuest || targetQuest.is_completed) {
+      return;
+    }
+
+    setProcessingQuestId(questId);
+    const previousQuests = quests;
+    const previousProgress = safeProgress;
+
+    setQuests(
+      quests.map((q) => (q.id === questId ? { ...q, is_completed: true } : q))
+    );
+
+    const optimisticProgress = applyXpGain(safeProgress, targetQuest.xp_reward || 0);
+    if (onProgressUpdate) {
+      onProgressUpdate(optimisticProgress);
+    }
 
     try {
       const result = await api.completeQuest(user.tg_id, questId);
-
-      setQuests(
-        quests.map((q) => (q.id === questId ? { ...q, is_completed: true } : q))
-      );
 
       if (result.leveled_up) {
         haptic.success();
         setLevelUpData(result.new_level);
       }
 
+      if (result.bonus_awarded) {
+        if (onProgressUpdate) {
+          onProgressUpdate((current) => applyXpGain(current, result.bonus_xp || 0));
+        }
+        setBonusData({ xp: result.bonus_xp || 0 });
+        if (result.bonus_leveled_up && !result.leveled_up) {
+          haptic.success();
+          setLevelUpData(result.bonus_new_level);
+        }
+      }
+
       onRefresh();
       setConfirmQuest(null);
     } catch (error) {
+      setQuests(previousQuests);
+      if (onProgressUpdate) {
+        onProgressUpdate(previousProgress);
+      }
       haptic.error();
       console.error('Error completing quest:', error);
     } finally {
-      setLoading(false);
+      setProcessingQuestId(null);
+    }
+  };
+
+  const handleSaveGoal = async () => {
+    if (!user?.tg_id) {
+      return;
+    }
+    setSavingGoal(true);
+    try {
+      const result = await api.updateGoal(user.tg_id, {
+        goal_text: goalText,
+        goal_level: goalLevel,
+      });
+      if (result?.progress && onProgressUpdate) {
+        onProgressUpdate(result.progress);
+      } else {
+        onRefresh();
+      }
+      haptic.success();
+    } catch (error) {
+      haptic.error();
+      console.error('Error updating goal:', error);
+    } finally {
+      setSavingGoal(false);
     }
   };
   
@@ -115,6 +212,8 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                 alt="Hero Background"
                 className="w-full h-full object-cover"
                 style={{ objectPosition: 'center center' }}
+                loading="lazy"
+                decoding="async"
               />
               {/* Gradient overlays for UI readability */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/60 pointer-events-none" />
@@ -259,8 +358,8 @@ export default function HomeScreen({ user, progress, onRefresh }) {
       {/* Quests Tab */}
       {activeTab === 'quests' && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="flex-1 overflow-y-auto pb-24"
         >
           <div className="p-6 space-y-4">
@@ -285,9 +384,88 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                       setConfirmQuest(quest);
                     }
                   }}
-                  disabled={loading || quest.is_completed}
+                  disabled={processingQuestId === quest.id || quest.is_completed}
                 />
               ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === 'goals' && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex-1 overflow-y-auto pb-24"
+        >
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold text-gaming">ЦЕЛИ</h2>
+              <div className="glass rounded-full px-4 py-2">
+                <span className="text-sm text-slate-400">
+                  {safeProgress.goal_progress || 0}%
+                </span>
+              </div>
+            </div>
+
+            <div className="relative overflow-hidden rounded-3xl p-6 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 via-slate-900/60 to-indigo-900/40">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-cyan-400/20 rounded-full blur-3xl" />
+              <div className="relative space-y-4">
+                <div className="text-sm uppercase tracking-widest text-cyan-300/70">Текущая цель</div>
+                <div className="text-2xl font-bold text-white">
+                  {safeProgress.goal_text || 'Добавь цель, чтобы начать путь'}
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>Целевой уровень</span>
+                  <span className="text-cyan-300 font-semibold">{safeProgress.goal_level || 10}</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${safeProgress.goal_progress || 0}%` }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="glass rounded-3xl p-6 border border-white/10 space-y-5">
+              <div className="text-xl font-bold">Новая цель</div>
+              <div className="space-y-2">
+                <label className="text-sm text-slate-400">Что ты хочешь достичь</label>
+                <input
+                  value={goalText}
+                  onChange={(event) => setGoalText(event.target.value)}
+                  placeholder="Например: Пробежать марафон"
+                  className="w-full rounded-2xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-white outline-none focus:border-cyan-400/60"
+                />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>Достичь на уровне</span>
+                  <span className="text-cyan-300 font-semibold">{goalLevel}</span>
+                </div>
+                <Slider
+                  value={[goalLevel]}
+                  min={5}
+                  max={50}
+                  step={5}
+                  onValueChange={(value) => setGoalLevel(value[0])}
+                />
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSaveGoal}
+                disabled={savingGoal}
+                className={`w-full py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${
+                  savingGoal
+                    ? 'bg-slate-700/60'
+                    : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500'
+                }`}
+              >
+                {savingGoal ? 'Сохраняю...' : 'СОХРАНИТЬ ЦЕЛЬ'}
+              </motion.button>
             </div>
           </div>
         </motion.div>
@@ -308,7 +486,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#4ECDC4] p-1 mx-auto mb-4">
                   <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
                     {user.avatar_url && !user.avatar_url.includes('placehold') ? (
-                      <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover object-top" />
+                      <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-5xl">🦸</span>
                     )}
@@ -411,6 +589,13 @@ export default function HomeScreen({ user, progress, onRefresh }) {
           onClose={() => setLevelUpData(null)}
         />
       )}
+
+      {bonusData && (
+        <BonusRewardModal
+          bonus={bonusData}
+          onClose={() => setBonusData(null)}
+        />
+      )}
     </div>
   );
 }
@@ -419,9 +604,9 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 function QuestCard({ quest, index, onComplete, disabled }) {
   return (
     <motion.button
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: index * 0.03 }}
       whileHover={!disabled ? { scale: 1.02, y: -2 } : {}}
       whileTap={!disabled ? { scale: 0.98 } : {}}
       onClick={!disabled ? onComplete : undefined}
@@ -555,5 +740,48 @@ function ProModal({ onClose, user, onRefresh }) {
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+function BonusRewardModal({ bonus, onClose }) {
+  return (
+    <AnimatePresence>
+      {bonus && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.85, y: 30 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.85, y: 30 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="relative w-full max-w-sm rounded-3xl border border-cyan-400/30 bg-gradient-to-b from-slate-800 via-slate-900 to-slate-950 p-8 text-center shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-cyan-400/30 via-blue-400/20 to-indigo-500/30 blur-2xl" />
+            <div className="relative space-y-4">
+              <div className="text-5xl">🏅</div>
+              <div className="text-sm uppercase tracking-widest text-cyan-300/70">Ежедневный бонус</div>
+              <div className="text-2xl font-bold text-white">Все квесты выполнены</div>
+              <div className="text-4xl font-black text-cyan-300">+{bonus.xp} XP</div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  haptic.success();
+                  onClose();
+                }}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 font-bold text-white shadow-lg"
+              >
+                КРУТО! ⚡
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
