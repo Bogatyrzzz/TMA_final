@@ -42,6 +42,9 @@ export default function HomeScreen({ user, progress, onRefresh }) {
 
   const loadQuests = async () => {
     try {
+      if (!user?.tg_id) {
+        return;
+      }
       const data = await api.getQuests(user.tg_id);
       setQuests(data);
     } catch (error) {
@@ -83,7 +86,7 @@ export default function HomeScreen({ user, progress, onRefresh }) {
     }
   };
 
-  if (!user || !progress) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -93,7 +96,9 @@ export default function HomeScreen({ user, progress, onRefresh }) {
     );
   }
 
-  const xpPercentage = (safeProgress.current_xp / safeProgress.next_level_xp) * 100;
+  const xpPercentage = safeProgress.next_level_xp > 0
+    ? (safeProgress.current_xp / safeProgress.next_level_xp) * 100
+    : 0;
   const completedDaily = quests.filter(q => q.is_daily && q.is_completed).length;
   const totalDaily = quests.filter(q => q.is_daily).length;
 
@@ -466,6 +471,9 @@ function QuestCard({ quest, index, onComplete, disabled }) {
 function ProModal({ onClose, user, onRefresh }) {
   const handleActivate = async () => {
     try {
+      if (!user?.tg_id) {
+        return;
+      }
       await api.activatePro(user.tg_id);
       haptic.success();
       onRefresh();

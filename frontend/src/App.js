@@ -6,6 +6,47 @@ import Onboarding from './components/Onboarding';
 import HomeScreen from './components/HomeScreen';
 import './App.css';
 
+const defaultProgress = {
+  current_level: 1,
+  current_xp: 0,
+  next_level_xp: 100,
+  total_xp: 0,
+  goal_progress: 0,
+};
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch() {}
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="text-3xl font-bold">Ошибка загрузки</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition"
+            >
+              Обновить страницу
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [tgUser, setTgUser] = useState(null);
@@ -13,25 +54,7 @@ function App() {
   const [progress, setProgress] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    // Initialize Telegram Web App
-    const tg = initTelegram();
-    const telegramUser = getTelegramUser();
-    
-    // For development fallback
-    const devUser = telegramUser || {
-      id: 123456789,
-      first_name: 'Test',
-      last_name: 'User',
-      username: 'testuser',
-      language_code: 'ru',
-    };
-    
-    setTgUser(devUser);
-    initializeUser(devUser);
-  }, []);
-
-  const initializeUser = async (telegramUser) => {
+  const initializeUser = React.useCallback(async (telegramUser) => {
     try {
       // Register or get existing user
       const userData = await api.registerUser({
@@ -48,9 +71,8 @@ function App() {
       if (!userData.age || !userData.avatar_url) {
         setShowOnboarding(true);
       } else {
-        // Load progress
         const progressData = await api.getProgress(telegramUser.id);
-        setProgress(progressData);
+        setProgress(progressData || defaultProgress);
       }
 
       haptic.light();
@@ -72,18 +94,52 @@ function App() {
         confidence: 2,
         stability: 2,
       };
-      const fallbackProgress = {
-        current_level: 1,
-        current_xp: 10,
-        next_level_xp: 100,
-      };
       setUser(fallbackUser);
-      setProgress(fallbackProgress);
+      setProgress(defaultProgress);
       setShowOnboarding(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    try {
+      initTelegram();
+      const telegramUser = getTelegramUser();
+      const devUser = telegramUser || {
+        id: 123456789,
+        first_name: 'Test',
+        last_name: 'User',
+        username: 'testuser',
+        language_code: 'ru',
+      };
+      
+      setTgUser(devUser);
+      initializeUser(devUser);
+    } catch (error) {
+      console.error('Telegram init error:', error);
+      const fallbackUser = {
+        tg_id: 123456789,
+        first_name: 'Fallback',
+        last_name: 'User',
+        username: 'fallback',
+        language_code: 'ru',
+        avatar_url: '',
+        is_pro: false,
+        active_branches: ['power'],
+        strength: 2,
+        health: 2,
+        intellect: 2,
+        agility: 2,
+        confidence: 2,
+        stability: 2,
+      };
+      setUser(fallbackUser);
+      setProgress(defaultProgress);
+      setShowOnboarding(false);
+      setLoading(false);
+    }
+  }, [initializeUser]);
 
   const handleOnboardingComplete = async (onboardingData) => {
     try {
@@ -97,7 +153,7 @@ function App() {
       const progressData = await api.getProgress(tgUser.id);
       
       setUser(userData);
-      setProgress(progressData);
+      setProgress(progressData || defaultProgress);
       setShowOnboarding(false);
       
       haptic.success();
@@ -115,7 +171,7 @@ function App() {
       const progressData = await api.getProgress(tgUser.id);
       
       setUser(userData);
-      setProgress(progressData);
+      setProgress(progressData || defaultProgress);
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -171,12 +227,18 @@ function App() {
   }
 
   if (showOnboarding) {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
+    return (
+      <ErrorBoundary>
+        <Onboarding onComplete={handleOnboardingComplete} />
+      </ErrorBoundary>
+    );
   }
 
   return (
     <div className="App">
-      <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} />
+      <ErrorBoundary>
+        <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} />
+      </ErrorBoundary>
     </div>
   );
 }
