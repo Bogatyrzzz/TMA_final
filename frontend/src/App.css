@@ -197,6 +197,27 @@
     var(--lq-gradient-primary);
 }
 
+.lq-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lq-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: lq-shimmer 1.5s infinite;
+  transform: translateX(-100%);
+}
+
+@keyframes lq-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* 3D Pushable Button */
 .btn-pushable {
   position: relative;
