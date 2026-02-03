@@ -240,6 +240,17 @@
   background: linear-gradient(to bottom, #FF8B55, #6EEEE4);
 }
 
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+
 /* Typography - Gaming style */
 .text-gaming {
   font-weight: 700;
@@ -294,4 +305,25 @@
 
 .stat-bar-animate {
   animation: fillBar 1s ease-out;
+}
+
+@keyframes lq-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.lq-shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: lq-shimmer 2s infinite linear;
+}
+
+.lq-nav-clip {
+  clip-path: circle(50% at 50% 50%);
 }

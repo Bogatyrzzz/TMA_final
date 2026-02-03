@@ -1,64 +1,48 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Target, User, Sparkles, Flag } from 'lucide-react';
+import { Home, Target, User, Flag } from 'lucide-react';
+const wizardMenu = `${process.env.PUBLIC_URL}/wizard_menu.png`;
 import { haptic } from '../lib/telegram';
 
 export default function BottomNav({ activeTab, onTabChange }) {
   const navItems = [
-    { id: 'quests', icon: Target, size: 24 },
-    { id: 'goals', icon: Flag, size: 24 },
-    { id: 'home', icon: Home, size: 32, isCenter: true },
-    { id: 'profile', icon: User, size: 24 },
-    { id: 'sage', icon: Sparkles, size: 24, disabled: true },
+    { id: 'quests', icon: Target, size: 24, label: 'Квесты' },
+    { id: 'goals', icon: Flag, size: 24, label: 'Цели' },
+    { id: 'home', icon: Home, size: 32, label: '', isCenter: true },
+    { id: 'profile', icon: User, size: 24, label: 'Профиль' },
+    { id: 'sage', size: 24, label: 'Маг', disabled: true },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 pb-safe z-50">
-      <div className="relative px-6 pb-6">
-        {/* Blur background */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent backdrop-blur-xl" />
-        
-        {/* Navigation container */}
-        <div className="relative flex items-center justify-center gap-4">
-          {navItems.map((item) => {
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="relative h-24 border-t border-white/10 flex justify-between items-center px-8 pb-4 shadow-2xl overflow-visible bg-transparent isolate">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.06), rgba(0,0,0,0.96))',
+            zIndex: 0,
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.0) 35%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.85) 100%)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 1,
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at 50% 0%, rgba(255,106,42,0.12) 0%, rgba(255,106,42,0.05) 70%, rgba(255,106,42,0.0) 98%)',
+            filter: 'blur(18px)',
+            zIndex: 2,
+          }}
+        />
+        <div className="flex items-center gap-6 relative z-10">
+          {navItems.slice(0, 2).map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
-            const isCenter = item.isCenter;
-            
-            if (isCenter) {
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => {
-                    haptic.medium();
-                    onTabChange(item.id);
-                  }}
-                  className="relative"
-                  whileTap={{ scale: 0.9 }}
-                  data-testid="nav-home"
-                >
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-orange-500 to-pink-500 rounded-full blur-xl opacity-50" />
-                  
-                  {/* Button */}
-                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 p-[3px] shadow-2xl">
-                    <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-600 to-pink-600 flex items-center justify-center">
-                      <Icon size={item.size} className="text-white" strokeWidth={2.5} />
-                    </div>
-                  </div>
-                  
-                  {/* Active indicator */}
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg"
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            }
-            
             return (
               <motion.button
                 key={item.id}
@@ -67,31 +51,104 @@ export default function BottomNav({ activeTab, onTabChange }) {
                   haptic.light();
                   onTabChange(item.id);
                 }}
-                className="relative"
+                className="flex flex-col items-center justify-center gap-1 w-10 relative z-10"
                 whileTap={!item.disabled ? { scale: 0.9 } : {}}
                 data-testid={`nav-${item.id}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-                  item.disabled 
-                    ? 'bg-slate-800/50 opacity-40' 
-                    : isActive
-                    ? 'bg-gradient-to-br from-slate-700 to-slate-800 shadow-lg'
-                    : 'bg-slate-800/80 hover:bg-slate-700/80'
-                }`}>
-                  <Icon 
-                    size={item.size} 
-                    className={item.disabled ? 'text-slate-600' : isActive ? 'text-cyan-400' : 'text-slate-400'} 
-                    strokeWidth={2}
+                <Icon
+                  size={item.size}
+                  className={item.disabled ? 'text-slate-600' : isActive ? 'text-[#FF6A2A]' : 'text-white/70'}
+                  strokeWidth={2}
+                />
+                <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? 'text-white' : 'text-white/50'}`}>
+                  {item.label}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        <div className="relative -top-5 z-10">
+          <motion.button
+            initial={false}
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.03 }}
+            animate={activeTab === 'home' ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+            transition={{ duration: 1.6, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+            onClick={() => {
+              haptic.medium();
+              onTabChange('home');
+            }}
+            className="w-[72px] h-[72px] bg-gradient-to-b from-[#FF6A2A] to-orange-700 rounded-full flex items-center justify-center shadow-[0_10px_26px_rgba(255,106,42,0.55)] lq-nav-clip transform transition-transform active:scale-95"
+            data-testid="nav-home"
+          >
+            <Home size={28} className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              animate={activeTab === 'home' ? { boxShadow: ['0 0 26px rgba(255,106,42,0.35)', '0 0 40px rgba(255,106,42,0.55)', '0 0 26px rgba(255,106,42,0.35)'] } : { boxShadow: '0 0 26px rgba(255,106,42,0.3)' }}
+              transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+            />
+            <motion.div
+              className="absolute -inset-3 rounded-full border border-[#FF6A2A]/45 blur-lg opacity-70"
+              animate={activeTab === 'home' ? { opacity: [0.45, 0.8, 0.45] } : { opacity: 0.6 }}
+              transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+            />
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              animate={{ opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: 2.4, ease: 'easeInOut', repeat: Infinity }}
+              style={{ background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.35), rgba(255,255,255,0))' }}
+            />
+            <div className="absolute top-2 w-10 h-5 bg-white/15 rounded-full blur-md" />
+          </motion.button>
+        </div>
+
+        <div className="flex items-center gap-6 relative z-10">
+          {navItems.slice(3).map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            if (item.id === 'sage') {
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    haptic.light();
+                  }}
+                  className="relative w-10 h-14 flex flex-col items-center justify-end"
+                  data-testid="nav-sage"
+                >
+                  <img
+                    src={wizardMenu}
+                    alt="Мудрец"
+                    className="absolute left-1/2 -translate-x-1/2 object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.75)]"
+                    style={{ width: 82, height: 82, bottom: 5, maxWidth: 'none' }}
                   />
-                </div>
-                
-                {isActive && !item.disabled && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full shadow-lg"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
+                  <span className="text-[9px] font-bold uppercase tracking-tight opacity-0 h-[12px] leading-none">
+                    Маг
+                  </span>
+                </button>
+              );
+            }
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => {
+                  if (item.disabled) return;
+                  haptic.light();
+                  onTabChange(item.id);
+                }}
+                className="flex flex-col items-center justify-center gap-1 w-10 relative z-10"
+                whileTap={!item.disabled ? { scale: 0.9 } : {}}
+                data-testid={`nav-${item.id}`}
+              >
+                <Icon
+                  size={item.size}
+                  className={item.disabled ? 'text-slate-600' : isActive ? 'text-[#33D6C7]' : 'text-white/70'}
+                  strokeWidth={2}
+                />
+                <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? 'text-white' : 'text-white/50'}`}>
+                  {item.label}
+                </span>
               </motion.button>
             );
           })}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ChevronRight, Star, Crown, CheckCircle2, Circle, Trophy, Gift, Sparkles, Target } from 'lucide-react';
+import { Zap, Star, Crown, CheckCircle2, Circle, Trophy, Gift, Sparkles, Target } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Dumbbell01Icon, HealthIcon, BrainIcon } from '@hugeicons/core-free-icons';
 import { haptic } from '../lib/telegram';
 import { api } from '../lib/api';
 import BottomNav from './BottomNav';
@@ -11,13 +13,15 @@ import { Slider } from './ui/slider';
 
 // Compact Stats Config - only icons
 const STATS = [
-  { key: 'strength', icon: '💪', color: 'text-red-400' },
-  { key: 'health', icon: '❤️', color: 'text-pink-400' },
-  { key: 'intellect', icon: '🧠', color: 'text-blue-400' },
-  { key: 'agility', icon: '⚡', color: 'text-yellow-400' },
-  { key: 'confidence', icon: '🔥', color: 'text-orange-400' },
-  { key: 'stability', icon: '🧘', color: 'text-cyan-400' },
+  { key: 'strength', icon: Dumbbell01Icon, label: 'СИЛА', color: 'text-red-400' },
+  { key: 'health', icon: HealthIcon, label: 'ЗДОРОВЬЕ', color: 'text-emerald-400' },
+  { key: 'intellect', icon: BrainIcon, label: 'ИНТЕЛЛЕКТ', color: 'text-blue-400' },
 ];
+const BRANCH_BADGES = {
+  power: { label: 'СИЛА', className: 'border-[#FF6A2A]/60 text-[#FF6A2A]' },
+  stability: { label: 'СТАБИЛЬНОСТЬ', className: 'border-[#33D6C7]/60 text-[#33D6C7]' },
+  longevity: { label: 'ДОЛГОЛЕТИЕ', className: 'border-emerald-400/60 text-emerald-300' },
+};
 
 export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate }) {
   const [quests, setQuests] = useState([]);
@@ -39,6 +43,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   const [bonusData, setBonusData] = useState(null);
   const [toast, setToast] = useState(null);
   const [achievedGoals, setAchievedGoals] = useState([]);
+  const [heroImageReady, setHeroImageReady] = useState(false);
   const safeProgress = progress || {
     current_level: 1,
     current_xp: 0,
@@ -338,6 +343,24 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
     }
   };
 
+  const avatarUrl = typeof user?.avatar_url === 'string' ? user.avatar_url : '';
+  const hasAvatar = avatarUrl && !avatarUrl.includes('placehold');
+  const heroImage = hasAvatar
+    ? avatarUrl
+    : 'https://lh3.googleusercontent.com/aida-public/AB6AXuCIEAiT5xqJUM44W0D26T0YBOsEINF2oJTOe3WbCXezg0dOzJslrk-xlUauPYKGt-1XBgndbWAPYrl2Yl5KO-4r5r9UX91qHLGm0QVLdkG91QmLOhXnq1rlfj2aP-k8_hJB2Y6ZurQiTFKOC3SSrOEeRV10eKD6Im3nlGD09nhXoXCeCkOUrh0BECbaY5cgLrsSc85v3i-K5sAP5dD_giFc-YK6pmjwi3lTG2rP72FHAYXfjUOgHDKJKWQDuSs95MKutvoO8ia4X8M';
+
+  useEffect(() => {
+    setHeroImageReady(false);
+    const image = new Image();
+    image.src = heroImage;
+    image.onload = () => setHeroImageReady(true);
+    image.onerror = () => setHeroImageReady(true);
+    return () => {
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [heroImage]);
+
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -353,165 +376,149 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
     : 0;
   const completedDaily = quests.filter(q => q.is_daily && q.is_completed).length;
   const totalDaily = quests.filter(q => q.is_daily).length;
+  const dailyPercent = totalDaily > 0 ? (completedDaily / totalDaily) * 100 : 0;
+  const heroName = user.first_name || user.username || 'Герой';
   const activeGoals = goals.filter((goal) => !goal.is_completed);
   const primaryGoal = activeGoals[0];
   const secondaryGoals = activeGoals.slice(1);
   const completedGoals = goals.filter((goal) => goal.is_completed);
   const canSaveGoal = !savingGoal && goalText.trim().length >= 3 && goalLevel >= 1 && goalLevel <= 50;
+  const activeBranches = (user.active_branches && user.active_branches.length > 0)
+    ? user.active_branches
+    : ['power'];
 
   return (
     <div className="h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white flex flex-col">
       {/* Home Tab - Avatar as Background */}
       {activeTab === 'home' && (
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Avatar Background - Full Screen */}
-          {user.avatar_url && !user.avatar_url.includes('placehold') ? (
-            <div className="absolute inset-0">
-              <img
-                src={user.avatar_url}
-                alt="Hero Background"
-                className="w-full h-full object-cover"
-                style={{ objectPosition: 'center center' }}
-                loading="lazy"
-                decoding="async"
-              />
-              {/* Gradient overlays for UI readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/60 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-            </div>
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-indigo-950/30 to-slate-950 flex items-center justify-center">
-              <span className="text-9xl opacity-30">🦸</span>
-            </div>
-          )}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={heroImage}
+              alt="Hero Background"
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+              decoding="async"
+              onLoad={() => setHeroImageReady(true)}
+              style={{ opacity: heroImageReady ? 1 : 0, transition: 'opacity 200ms ease-out' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/10 to-black/80 pointer-events-none" />
+          </div>
 
-          {/* UI Content - Overlaid on background */}
-          <div className="relative z-10 flex-1 flex flex-col">
-            {/* RPG HUD - Level Circle + XP Bar (Seamless Organic Shape) */}
-            <div className="flex items-center w-full px-4 pt-4 absolute top-0 left-0 z-50">
-              {/* Level Circle - Left Anchor (ON TOP) */}
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center relative z-20 shadow-[0_0_15px_rgba(139,92,246,0.6)] bg-gradient-to-br from-[#6366f1] to-[#a855f7] border-4 border-[#0F0F23]"
+          <main className="relative z-20 h-full flex flex-col justify-between px-4 pb-8 pt-6">
+            <div className="flex flex-col gap-3">
+              <div
+                className="w-full rounded-3xl px-3 py-2 shadow-2xl relative overflow-hidden border border-white/10"
+                style={{ background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)' }}
               >
-                <span className="text-white font-black text-xl leading-none">
-                  {safeProgress.current_level}
-                </span>
-                
-                {/* PRO Crown Badge */}
-                {user.is_pro && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-[#0F0F23] shadow-lg">
-                    <Crown size={12} className="text-white" />
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="relative flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#FF6A2A] to-orange-700 flex items-center justify-center border-[3px] border-orange-900/50 shadow-[0_0_12px_rgba(255,106,42,0.45)]">
+                    <span className="text-white font-extrabold text-lg drop-shadow-md">
+                      {safeProgress.current_level}
+                    </span>
+                    <div className="absolute top-1 left-2 w-3 h-1.5 bg-white/30 rounded-full blur-[2px]" />
+                    {user.is_pro && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-orange-900/50 shadow-lg">
+                        <Crown size={10} className="text-white" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </motion.div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex justify-between items-end mb-1 px-1">
+                      <span className="text-xs font-bold text-white tracking-wide drop-shadow-sm">{heroName}</span>
+                      <span className="text-[10px] font-bold text-[#33D6C7] uppercase tracking-wider">
+                        {safeProgress.current_xp} / {safeProgress.next_level_xp} XP
+                      </span>
+                    </div>
+                    <div className="h-3 w-full bg-black/60 rounded-full overflow-hidden relative border border-white/5">
+                      <motion.div
+                        className="h-full rounded-full shadow-[0_0_10px_rgba(255,106,42,0.6)] relative overflow-hidden"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${xpPercentage}%` }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        style={{ background: 'linear-gradient(to right, #FF6A2A, #FF8A3D)' }}
+                      >
+                        <div className="lq-shimmer-overlay" />
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              {/* XP Bar Container - Right Extension (UNDER the circle) */}
-              <div className="flex-1 h-10 -ml-6 pl-8 pr-4 bg-slate-900/90 backdrop-blur-md rounded-r-2xl border border-white/10 flex flex-col justify-center relative z-10">
-                {/* Text Labels */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    {safeProgress.current_xp}/{safeProgress.next_level_xp}
+            <div className="flex-grow"></div>
+
+            <div className="absolute left-4 top-[25%] flex flex-col gap-3">
+              {STATS.map((stat) => (
+                <div
+                  key={stat.key}
+                  className="flex items-center gap-2"
+                >
+                  <span className={`${stat.color}`} style={{ filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.85))' }}>
+                    <HugeiconsIcon icon={stat.icon} size={24} color="currentColor" strokeWidth={1.7} />
+                  </span>
+                  <span className="text-base font-bold text-white drop-shadow-[0_6px_10px_rgba(0,0,0,0.85)]">
+                    {user[stat.key] || 1}
                   </span>
                 </div>
-                
-                {/* XP Fill Track */}
-                <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden mt-1">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] rounded-full relative"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpPercentage}%` }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                  >
-                    {/* Shimmer effect */}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                      animate={{ x: ['-100%', '100%'] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                    />
-                  </motion.div>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Spacer for the fixed HUD */}
-            <div className="h-20" />
-
-            {/* Stats - positioned on sides */}
-            <div className="flex-1 relative">
-              {/* Left side stats */}
-              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 space-y-2">
-                {STATS.slice(0, 3).map((stat, idx) => (
-                  <motion.div
-                    key={stat.key}
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
-                  >
-                    <div className="text-base">{stat.icon}</div>
-                    <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Right side stats */}
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 space-y-2">
-                {STATS.slice(3, 6).map((stat, idx) => (
-                  <motion.div
-                    key={stat.key}
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
-                  >
-                    <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
-                    <div className="text-base">{stat.icon}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* Daily Quests Progress Button - Always visible at bottom */}
-            <div className="px-4 pb-24 pt-2">
+            <div className="flex flex-col gap-6 w-full max-w-md mx-auto mb-20 px-6">
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   haptic.medium();
                   setActiveTab('quests');
                 }}
-                className="w-full bg-black/40 backdrop-blur-md rounded-xl p-3 border border-white/20 shadow-lg"
+                className="group relative overflow-hidden bg-slate-900/60 backdrop-blur-xl border border-[#33D6C7]/20 rounded-2xl px-3 py-2.5 shadow-xl transition-all duration-300"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                      <Star size={20} className="text-white" />
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-[#33D6C7]/10 flex items-center justify-center text-[#33D6C7] border border-[#33D6C7]/20 shadow-[0_0_8px_rgba(51,214,199,0.25)]">
+                      <Star size={16} />
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-base drop-shadow-lg">Ежедневные квесты</div>
-                      <div className="text-xs text-white/70">
-                        {completedDaily} / {totalDaily} выполнено
+                      <h3 className="text-white font-bold text-sm leading-tight">Ежедневные квесты</h3>
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                        {activeBranches.map((branch) => {
+                          const meta = BRANCH_BADGES[branch] || { label: branch, className: 'border-white/30 text-white/70' };
+                          return (
+                            <span
+                              key={`branch-${branch}`}
+                              className={`text-[8px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full border ${meta.className}`}
+                            >
+                              {meta.label}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
-                  <ChevronRight size={20} className="text-white/70" />
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="bg-[#FF6A2A]/15 text-[#FF6A2A] text-[9px] font-bold px-2 py-0.5 rounded-full border border-[#FF6A2A]/20">
+                      +{dailyXp || 0} XP
+                    </span>
+                  </div>
                 </div>
-                
-                {/* Progress bar */}
-                <div className="mt-2 h-1.5 bg-white/20 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: totalDaily > 0 ? `${(completedDaily / totalDaily) * 100}%` : '0%' }}
-                    transition={{ duration: 0.5 }}
-                  />
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-[#33D6C7] shrink-0">{completedDaily}/{totalDaily}</span>
+                  <div className="h-2.5 flex-1 bg-black/50 rounded-full overflow-hidden relative border border-white/5">
+                    <motion.div
+                      className="h-full rounded-full relative overflow-hidden shadow-[0_0_12px_rgba(51,214,199,0.35)]"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${dailyPercent}%` }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      style={{ background: '#33D6C7' }}
+                    >
+                      <div className="lq-shimmer-overlay" />
+                    </motion.div>
+                  </div>
                 </div>
+                <div className="absolute -z-10 top-0 right-0 w-40 h-40 bg-[#33D6C7]/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
               </motion.button>
             </div>
-          </div>
+          </main>
         </div>
       )}
 
@@ -812,9 +819,9 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
       {/* Profile Tab */}
       {activeTab === 'profile' && (
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex-1 overflow-y-auto pb-24"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex-1 overflow-y-auto pb-24 overflow-x-hidden"
         >
           <div className="p-6 space-y-6">
             <h2 className="text-3xl font-bold text-gaming mb-6">ПРОФИЛЬ</h2>
@@ -823,8 +830,8 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               <div className="text-center mb-6">
                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#4ECDC4] p-1 mx-auto mb-4">
                   <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden">
-                    {user.avatar_url && !user.avatar_url.includes('placehold') ? (
-                      <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
+                    {hasAvatar ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-5xl">🦸</span>
                     )}
@@ -862,10 +869,12 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               <div className="grid grid-cols-2 gap-3">
                 {STATS.map((stat) => (
                   <div key={stat.key} className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl">
-                    <span className="text-2xl">{stat.icon}</span>
+                    <span className={`${stat.color}`}>
+                      <HugeiconsIcon icon={stat.icon} size={20} color="currentColor" strokeWidth={1.7} />
+                    </span>
                     <div>
                       <div className={`font-bold ${stat.color}`}>{user[stat.key] || 1}</div>
-                      <div className="text-xs text-slate-500 capitalize">{stat.key}</div>
+                      <div className="text-xs text-slate-500">{stat.label}</div>
                     </div>
                   </div>
                 ))}

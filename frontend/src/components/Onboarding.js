@@ -2,40 +2,23 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from './ui/input';
 import { Slider } from './ui/slider';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { haptic } from '../lib/telegram';
-import { Flame, Brain, Heart } from 'lucide-react';
 
-const BRANCHES = [
+const TOTAL_STEPS = 5;
+const GENDERS = [
   {
-    id: 'power',
-    icon: Flame,
-    title: '💪 СИЛА',
-    subtitle: 'Power',
-    description: 'Физическая мощь и уверенность',
-    stats: '+2 Сила, +1 Уверенность',
-    gradient: 'from-red-500 via-orange-500 to-yellow-500',
-    glow: 'rgba(239, 68, 68, 0.3)',
+    id: 'male',
+    title: 'Мужской',
+    icon: '👨',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBHdE7LqwasQiN_YEgLIP1fHG1q684r_3t6Gs4589chBFDg3eqC_MpCeEaXkYPDvRqOJOGN7Qjlb4PcHzOwiHAfDo2dB5eKT5w6Ev6z6yJVtJcUTAEUOj8y_NdlT0a2Xh3MzWCdJawu2opbJ8gbm1yJmFL5q8wFS4BNNs4sPJ-HAOpp7K5eOyf-i8JJVR2nggui5arxdKy0oUT-OHREC-A43QgWRcNFM7X-qYxpQQBPAyPvRzu5I8kmHcoGeUh-29KkiQsHAS4nJOQ',
   },
   {
-    id: 'stability',
-    icon: Brain,
-    title: '🧘 СТАБИЛЬНОСТЬ',
-    subtitle: 'Stability',
-    description: 'Баланс и интеллектуальный рост',
-    stats: '+2 Стабильность, +1 Интеллект',
-    gradient: 'from-blue-500 via-cyan-500 to-teal-500',
-    glow: 'rgba(59, 130, 246, 0.3)',
-  },
-  {
-    id: 'longevity',
-    icon: Heart,
-    title: '🌱 ДОЛГОЛЕТИЕ',
-    subtitle: 'Longevity',
-    description: 'Здоровье и гибкость',
-    stats: '+2 Здоровье, +1 Ловкость',
-    gradient: 'from-green-500 via-emerald-500 to-teal-500',
-    glow: 'rgba(34, 197, 94, 0.3)',
+    id: 'female',
+    title: 'Женский',
+    icon: '👩',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCiYF0iqEBBKnzI0d3H8-SSnR4sHxA6ehMPAar4GnTEZ7upbtZHIOdBT91z28AQRaD_HfTBcxS-_vl5mdCvePsb6rz7sEHaeWWIUJDskD3Imx0sh6EDPc1XqRumLEnj7uiN0P9KDL0dqMxvYEoxJHYBocbzRmN2zHof_4rh8NAhdnomssZKlyBFjvzvfK8y8qYP_WKfwxMQvL3_NnX5vipscUtDjN0SdhRxIdUWE0cDUmsv6KVcnJTVihvKkhly-0ju3b-sJOV4OFY',
   },
 ];
 
@@ -48,16 +31,21 @@ export default function Onboarding({ onComplete }) {
     goal_text: '',
     goal_level: 10,
     selfie_url: null,
+    about_text: '',
   });
 
   const handleNext = () => {
-    haptic.light();
-    setStep(step + 1);
+    if (step < TOTAL_STEPS) {
+      haptic.light();
+      setStep(step + 1);
+    }
   };
 
   const handleBack = () => {
-    haptic.light();
-    setStep(step - 1);
+    if (step > 1) {
+      haptic.light();
+      setStep(step - 1);
+    }
   };
 
   const handleComplete = () => {
@@ -66,369 +54,378 @@ export default function Onboarding({ onComplete }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white p-6">
-      {/* Progress Bar - Thick & Juicy */}
-      <div className="w-full mb-8">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-slate-400">Шаг {step} из 3</span>
-          <span className="font-bold text-[#4ECDC4]">{Math.round((step / 3) * 100)}%</span>
+    <div
+      className="min-h-screen text-white flex flex-col"
+      style={{
+        backgroundColor: '#0F0F23',
+        backgroundImage: 'radial-gradient(circle at 50% 0%, #2D2D44 0%, #0F0F23 70%)',
+      }}
+    >
+      <div className="w-full pt-12 pb-4 px-6">
+        <div className="flex items-center justify-center gap-2">
+          {Array.from({ length: TOTAL_STEPS }).map((_, index) => {
+            const current = index + 1 === step;
+            const completed = index + 1 < step;
+            return (
+              <div
+                key={`step-${index}`}
+                className={`${current ? 'w-8' : 'w-2'} h-2 rounded-full ${
+                  current || completed ? 'bg-[#FF6A2A]' : 'bg-white/20'
+                }`}
+                style={{
+                  boxShadow: current ? '0 0 20px rgba(255, 106, 42, 0.4)' : 'none',
+                }}
+              />
+            );
+          })}
         </div>
-        <div className="progress-bar-thick">
-          <motion.div
-            className="progress-bar-fill"
-            initial={{ width: 0 }}
-            animate={{ width: `${(step / 3) * 100}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            style={{ background: 'linear-gradient(to right, #FF6B35, #4ECDC4)' }}
-          />
+        <div className="flex items-center justify-between text-xs text-white/60 mt-3">
+          <span>Шаг {step} из {TOTAL_STEPS}</span>
+          <span className="font-semibold text-[#33D6C7]">
+            {Math.round((step / TOTAL_STEPS) * 100)}%
+          </span>
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {step === 1 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="space-y-8"
-          >
-            <div className="text-center mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="text-6xl mb-4"
-              >
-                🦸
-              </motion.div>
-              <h2 className="text-4xl font-bold text-gaming mb-3">РАССКАЖИ О СЕБЕ</h2>
-              <p className="text-slate-400 text-lg">Создадим твоего уникального героя</p>
-            </div>
-
-            <div className="space-y-6">
-              {/* Age Slider */}
-              <div className="glass rounded-2xl p-6 border border-white/10">
-                <div className="flex justify-between items-center mb-4">
-                  <label className="text-lg font-medium text-slate-300">Возраст</label>
-                  <motion.div
-                    key={formData.age}
-                    initial={{ scale: 1.2 }}
-                    animate={{ scale: 1 }}
-                    className="text-3xl font-bold text-gaming text-[#FF6B35]"
-                  >
-                    {formData.age}
-                  </motion.div>
-                </div>
-                <Slider
-                  value={[formData.age]}
-                  onValueChange={(value) => {
-                    haptic.selection();
-                    setFormData({ ...formData, age: value[0] });
-                  }}
-                  min={18}
-                  max={80}
-                  step={1}
-                  className="mt-2"
-                />
-              </div>
-
-              {/* Gender Selection */}
-              <div className="glass rounded-2xl p-6 border border-white/10">
-                <label className="text-lg font-medium text-slate-300 block mb-4">Пол</label>
-                <RadioGroup
-                  value={formData.gender}
-                  onValueChange={(value) => {
-                    haptic.selection();
-                    setFormData({ ...formData, gender: value });
-                  }}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`relative ${
-                      formData.gender === 'male'
-                        ? 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-2 border-blue-500'
-                        : 'bg-white/5 border border-white/10'
-                    } rounded-xl p-4 cursor-pointer transition-all`}
-                  >
-                    <RadioGroupItem value="male" id="male" className="hidden" />
-                    <label htmlFor="male" className="cursor-pointer flex flex-col items-center space-y-2">
-                      <div className="text-4xl">👨</div>
-                      <span className="font-bold">Мужской</span>
-                    </label>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`relative ${
-                      formData.gender === 'female'
-                        ? 'bg-gradient-to-br from-pink-500/20 to-purple-500/20 border-2 border-pink-500'
-                        : 'bg-white/5 border border-white/10'
-                    } rounded-xl p-4 cursor-pointer transition-all`}
-                  >
-                    <RadioGroupItem value="female" id="female" className="hidden" />
-                    <label htmlFor="female" className="cursor-pointer flex flex-col items-center space-y-2">
-                      <div className="text-4xl">👩</div>
-                      <span className="font-bold">Женский</span>
-                    </label>
-                  </motion.div>
-                </RadioGroup>
-              </div>
-
-              <div className="glass rounded-2xl p-6 border border-white/10">
-                <label className="text-lg font-medium text-slate-300 block mb-4">Селфи (ссылка)</label>
-                <Input
-                  placeholder="https://... (опционально)"
-                  value={formData.selfie_url || ''}
-                  onChange={(e) => setFormData({ ...formData, selfie_url: e.target.value })}
-                  className="py-5 text-lg bg-slate-900/50 border-slate-700 rounded-xl focus:border-[#4ECDC4] transition-all"
-                  data-testid="selfie-input"
-                />
-              </div>
-            </div>
-
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleNext}
-              className="w-full btn-pushable"
-              data-testid="onboarding-next-step1"
+      <div className="flex-1 flex flex-col px-6 pb-8">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="gender"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex-1 flex flex-col"
             >
-              <span className="btn-shadow"></span>
-              <span className="btn-edge"></span>
-              <span className="btn-front">
-                ДАЛЕЕ →
-              </span>
-            </motion.button>
-          </motion.div>
-        )}
+              <div className="text-center pt-2 pb-6">
+                <h1 className="text-white tracking-tight text-[36px] font-black leading-tight drop-shadow-lg">
+                  Выберите пол
+                </h1>
+                <p className="text-white/70 text-base font-medium leading-normal pt-3 max-w-xs mx-auto">
+                  Это нужно для генерации стартового героя.
+                </p>
+              </div>
 
-        {step === 2 && (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-gaming mb-3">ВЫБЕРИ ВЕТКУ</h2>
-              <p className="text-slate-400 text-lg">Определи путь своего героя</p>
-            </div>
-
-            <div className="space-y-4">
-              {BRANCHES.map((branch, index) => {
-                const Icon = branch.icon;
-                const isSelected = formData.branch === branch.id;
-                
-                return (
-                  <motion.div
-                    key={branch.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      haptic.medium();
-                      setFormData({ ...formData, branch: branch.id });
-                    }}
-                    className={`relative glass rounded-3xl p-6 cursor-pointer transition-all overflow-hidden ${
-                      isSelected
-                        ? 'border-2 border-white/30 shadow-2xl'
-                        : 'border border-white/10'
-                    }`}
-                    data-testid={`branch-${branch.id}`}
-                  >
-                    {/* Gradient Background */}
-                    {isSelected && (
-                      <motion.div
-                        layoutId="selectedBranch"
-                        className={`absolute inset-0 bg-gradient-to-br ${branch.gradient} opacity-20`}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      />
-                    )}
-                    
-                    {/* Glow effect */}
-                    {isSelected && (
-                      <div 
-                        className="absolute inset-0" 
-                        style={{ 
-                          background: `radial-gradient(circle at center, ${branch.glow} 0%, transparent 70%)`,
-                          filter: 'blur(20px)'
-                        }} 
-                      />
-                    )}
-
-                    <div className="relative flex items-start space-x-4">
-                      <motion.div
-                        animate={{ rotate: isSelected ? [0, 5, -5, 0] : 0 }}
-                        transition={{ repeat: isSelected ? Infinity : 0, duration: 2 }}
-                        className={`p-4 rounded-2xl bg-gradient-to-br ${branch.gradient}`}
+              <div className="flex-1 flex items-center justify-center w-full">
+                <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+                  {GENDERS.map((gender) => {
+                    const selected = formData.gender === gender.id;
+                    return (
+                      <button
+                        key={gender.id}
+                        onClick={() => {
+                          haptic.selection();
+                          setFormData({ ...formData, gender: gender.id });
+                        }}
+                        className="group relative flex flex-col h-[320px] w-full cursor-pointer transition-all duration-300 ease-out active:scale-95 text-left"
                       >
-                        <Icon size={32} className="text-white" />
-                      </motion.div>
-                      
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-gaming mb-2">{branch.title}</h3>
-                        <p className="text-slate-400 mb-3">{branch.description}</p>
-                        <div className="inline-block glass rounded-full px-4 py-2">
-                          <span className="text-xs font-bold text-[#4ECDC4]">{branch.stats}</span>
-                        </div>
-                      </div>
-                      
-                      {isSelected && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="text-3xl"
+                        {selected && (
+                          <div className="absolute -inset-0.5 bg-[#FF6A2A]/30 blur-xl rounded-2xl opacity-60" />
+                        )}
+                        <div
+                          className={`w-full h-full rounded-2xl flex flex-col overflow-hidden relative transition-all duration-300 ${
+                            selected ? 'border border-[#FF6A2A]/70 bg-white/10' : 'border border-white/10 bg-white/5'
+                          }`}
+                          style={{
+                            boxShadow: selected ? '0 0 25px rgba(255, 106, 42, 0.25)' : 'none',
+                            backdropFilter: 'blur(20px)',
+                          }}
                         >
-                          ✔️
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="flex gap-4">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleBack}
-                className="flex-1 py-4 rounded-xl glass border border-white/20 font-bold"
-                data-testid="onboarding-back-step2"
-              >
-                ← Назад
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleNext}
-                className="flex-2 btn-pushable"
-                data-testid="onboarding-next-step2"
-                style={{ flex: 2 }}
-              >
-                <span className="btn-shadow"></span>
-                <span className="btn-edge"></span>
-                <span className="btn-front">
-                  ДАЛЕЕ →
-                </span>
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 3 && (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="space-y-6"
-          >
-            <div className="text-center mb-8">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="text-6xl mb-4"
-              >
-                🎯
-              </motion.div>
-              <h2 className="text-4xl font-bold text-gaming mb-3">ПОСТАВЬ ЦЕЛЬ</h2>
-              <p className="text-slate-400 text-lg">Что хочешь достичь?</p>
-            </div>
-
-            <div className="space-y-6">
-              {/* Goal Input */}
-              <div className="glass rounded-2xl p-6 border border-white/10">
-                <label className="text-lg font-medium text-slate-300 block mb-4">Твоя цель</label>
-                <Input
-                  placeholder="Например: Купить новый гаджет"
-                  value={formData.goal_text}
-                  onChange={(e) => setFormData({ ...formData, goal_text: e.target.value })}
-                  className="py-6 text-lg bg-slate-900/50 border-slate-700 rounded-xl focus:border-[#4ECDC4] transition-all"
-                  data-testid="goal-input"
-                />
+                          <div className="flex-1 w-full relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F23]/80 via-transparent to-transparent z-10" />
+                            <div
+                              className="w-full h-full bg-cover bg-center opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                              style={{ backgroundImage: `url("${gender.image}")` }}
+                            />
+                          </div>
+                          <div className="relative z-20 p-4 pt-2 flex flex-col items-center border-t border-white/10 bg-white/5 backdrop-blur-sm">
+                            <div
+                              className={`h-10 w-10 rounded-full flex items-center justify-center mb-2 transition-colors duration-300 ${
+                                selected ? 'bg-[#FF6A2A] text-white shadow-[0_0_16px_rgba(255,106,42,0.45)]' : 'bg-white/10 text-white/70'
+                              }`}
+                            >
+                              <span className="text-xl">{gender.icon}</span>
+                            </div>
+                            <span className="text-white text-lg font-bold tracking-wide">{gender.title}</span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Goal Level */}
-              <div className="glass rounded-2xl p-6 border border-white/10">
-                <div className="flex justify-between items-center mb-4">
-                  <label className="text-lg font-medium text-slate-300">Достичь на уровне</label>
-                  <motion.div
-                    key={formData.goal_level}
-                    initial={{ scale: 1.2 }}
-                    animate={{ scale: 1 }}
-                    className="text-3xl font-bold text-gaming text-[#FF6B35]"
-                  >
-                    {formData.goal_level}
-                  </motion.div>
-                </div>
-                <Slider
-                  value={[formData.goal_level]}
-                  onValueChange={(value) => {
-                    haptic.selection();
-                    setFormData({ ...formData, goal_level: value[0] });
+              <div className="w-full pt-6">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleNext}
+                  className="w-full relative flex items-center justify-center overflow-hidden rounded-xl h-14 text-white text-lg font-bold tracking-wide"
+                  style={{
+                    background: '#FF6A2A',
+                    boxShadow: '0 0 20px rgba(255, 106, 42, 0.35)',
                   }}
-                  min={5}
-                  max={50}
-                  step={5}
-                  className="mt-2"
-                />
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Далее
+                    <span className="text-xl">→</span>
+                  </span>
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div
+              key="age"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex-1 flex flex-col"
+            >
+              <div className="text-center pt-2 pb-6">
+                <h2 className="text-[32px] font-black tracking-tight">Сколько вам лет?</h2>
+                <p className="text-white/70 text-base font-medium leading-normal pt-3 max-w-xs mx-auto">
+                  Это помогает рассчитать путь прокачки героя.
+                </p>
               </div>
 
-              {/* Tip Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass rounded-2xl p-6 border border-[#4ECDC4]/30 bg-gradient-to-br from-[#4ECDC4]/10 to-[#FF6B35]/10"
-              >
-                <div className="flex items-start space-x-3">
-                  <div className="text-3xl">💡</div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-2">Совет</h4>
-                    <p className="text-sm text-slate-300">
-                      Выбери реальную цель, которая мотивирует тебя! Это может быть покупка, путешествие,
-                      достижение в карьере или что угодно важное для тебя.
-                    </p>
+              <div className="space-y-6 flex-1">
+                <div className="glass rounded-2xl p-6 border border-white/10">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-lg font-medium text-white/80">Возраст</label>
+                    <motion.div
+                      key={formData.age}
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                      className="text-3xl font-bold text-[#FF6A2A]"
+                    >
+                      {formData.age}
+                    </motion.div>
                   </div>
+                  <Slider
+                    value={[formData.age]}
+                    onValueChange={(value) => {
+                      haptic.selection();
+                      setFormData({ ...formData, age: value[0] });
+                    }}
+                    min={16}
+                    max={80}
+                    step={1}
+                    className="mt-2"
+                  />
                 </div>
-              </motion.div>
-            </div>
+              </div>
 
-            <div className="flex gap-4">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleBack}
-                className="flex-1 py-4 rounded-xl glass border border-white/20 font-bold"
-                data-testid="onboarding-back-step3"
-              >
-                ← Назад
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleComplete}
-                disabled={!formData.goal_text}
-                className="flex-2 btn-pushable"
-                data-testid="onboarding-complete"
-                style={{ flex: 2, opacity: !formData.goal_text ? 0.5 : 1 }}
-              >
-                <span className="btn-shadow"></span>
-                <span className="btn-edge"></span>
-                <span className="btn-front">
-                  🚀 СОЗДАТЬ ГЕРОЯ!
-                </span>
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <div className="flex gap-3 pt-6">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBack}
+                  className="flex-1 h-14 rounded-xl border border-white/10 text-white/80 font-semibold"
+                >
+                  Назад
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleNext}
+                  className="flex-[1.4] h-14 rounded-xl text-white font-bold"
+                  style={{
+                    background: '#FF6A2A',
+                    boxShadow: '0 0 20px rgba(255, 106, 42, 0.35)',
+                  }}
+                >
+                  Далее
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 3 && (
+            <motion.div
+              key="selfie"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex-1 flex flex-col"
+            >
+              <div className="text-center pt-2 pb-6">
+                <h2 className="text-[32px] font-black tracking-tight">Загрузите селфи</h2>
+                <p className="text-white/70 text-base font-medium leading-normal pt-3 max-w-xs mx-auto">
+                  Пока что это заглушка. Скоро добавим загрузку.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col gap-6">
+                <div className="border border-dashed border-white/20 rounded-2xl p-6 bg-white/5 text-center">
+                  <div className="text-5xl mb-3">📷</div>
+                  <div className="text-white/80 font-semibold mb-2">Селфи будет использоваться для героя</div>
+                  <div className="text-sm text-white/50">Формат: JPG/PNG, портрет</div>
+                </div>
+                <button
+                  type="button"
+                  className="h-14 rounded-xl bg-white/10 text-white/60 font-semibold"
+                  disabled
+                >
+                  Загрузить селфи
+                </button>
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBack}
+                  className="flex-1 h-14 rounded-xl border border-white/10 text-white/80 font-semibold"
+                >
+                  Назад
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleNext}
+                  className="flex-[1.4] h-14 rounded-xl text-white font-bold"
+                  style={{
+                    background: '#FF6A2A',
+                    boxShadow: '0 0 20px rgba(255, 106, 42, 0.35)',
+                  }}
+                >
+                  Далее
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 4 && (
+            <motion.div
+              key="about"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex-1 flex flex-col"
+            >
+              <div className="text-center pt-2 pb-6">
+                <h2 className="text-[32px] font-black tracking-tight">Расскажите о себе</h2>
+                <p className="text-white/70 text-base font-medium leading-normal pt-3 max-w-xs mx-auto">
+                  Ваш стиль, профессия и что угодно важное.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col gap-4">
+                <textarea
+                  value={formData.about_text}
+                  onChange={(event) => setFormData({ ...formData, about_text: event.target.value })}
+                  placeholder="Например: дизайнер, люблю хайкинг и комиксы. Хочу прокачать дисциплину."
+                  className="min-h-[180px] rounded-2xl bg-white/5 border border-white/10 px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-[#33D6C7] transition-all"
+                />
+                <div className="text-xs text-white/50">
+                  Подсказка: стиль, профессия, привычки, интересы.
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBack}
+                  className="flex-1 h-14 rounded-xl border border-white/10 text-white/80 font-semibold"
+                >
+                  Назад
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleNext}
+                  className="flex-[1.4] h-14 rounded-xl text-white font-bold"
+                  style={{
+                    background: '#FF6A2A',
+                    boxShadow: '0 0 20px rgba(255, 106, 42, 0.35)',
+                  }}
+                >
+                  Далее
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div
+              key="goal"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex-1 flex flex-col"
+            >
+              <div className="text-center pt-2 pb-6">
+                <h2 className="text-[32px] font-black tracking-tight">Первая цель</h2>
+                <p className="text-white/70 text-base font-medium leading-normal pt-3 max-w-xs mx-auto">
+                  Опиши подарок или достижение, которое хочешь получить.
+                </p>
+              </div>
+
+              <div className="space-y-6 flex-1">
+                <div className="glass rounded-2xl p-6 border border-white/10">
+                  <label className="text-lg font-medium text-white/80 block mb-4">Цель</label>
+                  <Input
+                    placeholder="Например: Новый ноутбук для работы"
+                    value={formData.goal_text}
+                    onChange={(e) => setFormData({ ...formData, goal_text: e.target.value })}
+                    className="py-6 text-lg bg-transparent border-white/10 rounded-xl focus:border-[#33D6C7] transition-all"
+                    data-testid="goal-input"
+                  />
+                </div>
+
+                <div className="glass rounded-2xl p-6 border border-white/10">
+                  <div className="flex justify-between items-center mb-4">
+                    <label className="text-lg font-medium text-white/80">Достичь на уровне</label>
+                    <motion.div
+                      key={formData.goal_level}
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                      className="text-3xl font-bold text-[#FF6A2A]"
+                    >
+                      {formData.goal_level}
+                    </motion.div>
+                  </div>
+                  <Slider
+                    value={[formData.goal_level]}
+                    onValueChange={(value) => {
+                      haptic.selection();
+                      setFormData({ ...formData, goal_level: value[0] });
+                    }}
+                    min={5}
+                    max={50}
+                    step={5}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-6">
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleBack}
+                  className="flex-1 h-14 rounded-xl border border-white/10 text-white/80 font-semibold"
+                >
+                  Назад
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleComplete}
+                  disabled={!formData.goal_text.trim()}
+                  className="flex-[1.4] h-14 rounded-xl text-white font-bold"
+                  style={{
+                    background: '#FF6A2A',
+                    boxShadow: '0 0 20px rgba(255, 106, 42, 0.35)',
+                    opacity: formData.goal_text.trim() ? 1 : 0.5,
+                  }}
+                >
+                  Создать героя
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

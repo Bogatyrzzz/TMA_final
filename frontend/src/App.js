@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MagicWand01Icon } from '@hugeicons/core-free-icons';
 import { initTelegram, getTelegramUser, haptic } from './lib/telegram';
 import { api } from './lib/api';
 import Onboarding from './components/Onboarding';
@@ -56,6 +58,7 @@ function App() {
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
   const [initError, setInitError] = useState('');
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const forceOnboarding = typeof window !== 'undefined' && window.location.search.includes('onboarding=1');
 
   const initializeUser = React.useCallback(async (telegramUser) => {
     try {
@@ -210,32 +213,53 @@ function App() {
     }
   };
 
+  if (forceOnboarding) {
+    return (
+      <ErrorBoundary>
+        <Onboarding onComplete={() => {}} />
+      </ErrorBoundary>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center text-white"
+        style={{
+          backgroundColor: '#0F0F23',
+          backgroundImage: 'radial-gradient(circle at 50% 0%, #2D2D44 0%, #0F0F23 70%)',
+        }}
+      >
         <div className="text-center">
           <motion.div
             animate={{ 
-              scale: [1, 1.2, 1],
-              rotate: [0, 5, -5, 0]
+              scale: [1, 1.12, 1],
+              rotate: [0, 6, -6, 0]
             }}
-            transition={{ repeat: Infinity, duration: 1.5 }}
-            className="text-8xl mb-6"
+            transition={{ repeat: Infinity, duration: 1.6 }}
+            className="mb-6"
           >
-            🦸
+            <div className="relative flex items-center justify-center w-20 h-20 mx-auto">
+              <div className="absolute inset-0 rounded-3xl bg-[#FF6A2A]/20 blur-2xl" />
+              <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-[#FF6A2A]/30 to-[#33D6C7]/20 blur-xl" />
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6A2A] to-[#FF8A3D] shadow-[0_10px_30px_rgba(255,106,42,0.45)] flex items-center justify-center">
+                <HugeiconsIcon icon={MagicWand01Icon} size={34} color="#0F0F23" strokeWidth={1.8} />
+              </div>
+            </div>
           </motion.div>
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
-            className="text-white text-2xl font-bold text-gaming"
+            className="text-white text-2xl font-bold tracking-wide"
           >
-            ЗАГРУЗКА...
+            Загружаю, Босс
           </motion.div>
           <div className="mt-6 w-64 mx-auto progress-bar-thick">
             <motion.div
               className="progress-bar-fill"
               animate={{ width: ["0%", "100%"] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              style={{ background: '#33D6C7' }}
             />
           </div>
         </div>
@@ -272,7 +296,13 @@ function App() {
 
   if (isGeneratingAvatar) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div
+        className="min-h-screen flex items-center justify-center text-white"
+        style={{
+          backgroundColor: '#0F0F23',
+          backgroundImage: 'radial-gradient(circle at 50% 0%, #2D2D44 0%, #0F0F23 70%)',
+        }}
+      >
         <div className="text-center">
           <motion.div
             animate={{ scale: [1, 1.1, 1], rotate: [0, 3, -3, 0] }}
@@ -284,7 +314,7 @@ function App() {
           <div className="text-white text-2xl font-bold text-gaming mb-3">
             Генерируем твоего героя
           </div>
-          <div className="text-slate-400 mb-6">
+          <div className="text-white/70 mb-6">
             Осталось совсем чуть‑чуть
           </div>
           <div className="mt-2 w-72 mx-auto progress-bar-thick">
@@ -292,6 +322,7 @@ function App() {
               className="progress-bar-fill"
               animate={{ width: ["0%", "100%"] }}
               transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
+              style={{ background: '#33D6C7' }}
             />
           </div>
         </div>
