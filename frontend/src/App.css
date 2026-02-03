@@ -1,221 +1,17 @@
 /* ===== LIFEQUEST HERO - MOBILE RPG DESIGN ===== */
 
-:root {
-  --lq-bg-1: #0F0F23;
-  --lq-bg-2: #1a1a2e;
-  --lq-bg-deep: #070912;
-  --lq-primary: #FF6B35;
-  --lq-accent: #4ECDC4;
-  --lq-accent-2: #7DD3FC;
-  --lq-text-muted: rgba(255, 255, 255, 0.6);
-  --lq-text-soft: rgba(255, 255, 255, 0.4);
-  --lq-glass-panel-bg: rgba(20, 15, 13, 0.65);
-  --lq-glass-panel-border: rgba(255, 255, 255, 0.08);
-  --lq-glass-chip-bg: rgba(0, 0, 0, 0.5);
-  --lq-glass-chip-border: rgba(255, 255, 255, 0.05);
-  --lq-shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --lq-shadow-glow: 0 0 20px rgba(255, 107, 53, 0.4);
-  --lq-shadow-xp: 0 0 4px rgba(78, 205, 196, 0.6);
-  --lq-radius-card: 1.5rem;
-  --lq-radius-panel: 1.25rem;
-  --lq-radius-chip: 0.875rem;
-  --lq-radius-pill: 9999px;
-  --lq-radius-button: 12px;
-  --lq-blur-panel: 14px;
-  --lq-blur-chip: 6px;
-  --lq-gradient-primary: linear-gradient(to right, var(--lq-primary), var(--lq-accent));
-  --lq-progress-track: rgba(15, 23, 42, 0.5);
-  --lq-progress-fill: linear-gradient(to right, var(--lq-accent), var(--lq-accent-2));
-  --lq-overlay-top: linear-gradient(to bottom, rgba(7, 9, 18, 0.8), rgba(7, 9, 18, 0.2), transparent);
-  --lq-overlay-bottom: linear-gradient(to top, rgba(7, 9, 18, 0.85), rgba(7, 9, 18, 0.25), transparent);
-}
-
 .App {
   min-height: 100vh;
-  background: linear-gradient(to bottom, var(--lq-bg-1), var(--lq-bg-2));
+  background: linear-gradient(to bottom, #0F0F23, #1a1a2e);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 /* Global Glassmorphism */
 .glass {
-  background: var(--lq-glass-panel-bg);
-  backdrop-filter: blur(var(--lq-blur-panel));
-  -webkit-backdrop-filter: blur(var(--lq-blur-panel));
-  border: 1px solid var(--lq-glass-panel-border);
-  box-shadow: var(--lq-shadow-panel);
-}
-
-.lq-glass-panel {
-  background: var(--lq-glass-panel-bg);
-  backdrop-filter: blur(var(--lq-blur-panel));
-  -webkit-backdrop-filter: blur(var(--lq-blur-panel));
-  border: 1px solid var(--lq-glass-panel-border);
-  box-shadow: var(--lq-shadow-panel);
-}
-
-.lq-glass-chip {
-  background: var(--lq-glass-chip-bg);
-  backdrop-filter: blur(var(--lq-blur-chip));
-  -webkit-backdrop-filter: blur(var(--lq-blur-chip));
-  border: 1px solid var(--lq-glass-chip-border);
-}
-
-.lq-overlay-top {
-  background: var(--lq-overlay-top);
-}
-
-.lq-overlay-bottom {
-  background: var(--lq-overlay-bottom);
-}
-
-.lq-main-screen {
-  background: linear-gradient(to bottom, var(--lq-bg-1), var(--lq-bg-2));
-}
-
-.lq-text-muted {
-  color: var(--lq-text-muted);
-}
-
-.lq-text-soft {
-  color: var(--lq-text-soft);
-}
-
-.lq-safe-top {
-  padding-top: calc(env(safe-area-inset-top) + 0.75rem);
-}
-
-.lq-safe-bottom {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem);
-}
-
-.lq-xp-glow {
-  filter: drop-shadow(var(--lq-shadow-xp));
-}
-
-.lq-xp-fill {
-  background: var(--lq-progress-fill);
-}
-
-.lq-progress-track {
-  background: var(--lq-progress-track);
-}
-
-.lq-shadow-glow {
-  box-shadow: var(--lq-shadow-glow);
-}
-
-.lq-level-orb {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), transparent 55%),
-    linear-gradient(135deg, var(--lq-primary), var(--lq-accent));
-  border: 4px solid var(--lq-bg-1);
-  box-shadow: 0 0 16px rgba(255, 107, 53, 0.35);
-}
-
-.lq-ring-track {
-  stroke: rgba(255, 255, 255, 0.1);
-}
-
-.lq-ring-progress {
-  stroke: var(--lq-accent);
-  filter: drop-shadow(var(--lq-shadow-xp));
-}
-
-.lq-pro-badge {
-  background: linear-gradient(135deg, #FBBF24, #FB923C);
-  border: 2px solid var(--lq-bg-1);
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
-}
-
-.lq-quest-icon {
-  background: linear-gradient(135deg, #22D3EE, #3B82F6);
-}
-
-.lq-stat-strength {
-  color: #F87171;
-}
-
-.lq-stat-health {
-  color: #F472B6;
-}
-
-.lq-stat-intellect {
-  color: #60A5FA;
-}
-
-.lq-stat-agility {
-  color: #FACC15;
-}
-
-.lq-stat-confidence {
-  color: #FB923C;
-}
-
-.lq-stat-stability {
-  color: #22D3EE;
-}
-
-.lq-nav-blur {
-  background: linear-gradient(to top, rgba(7, 9, 18, 0.95), rgba(7, 9, 18, 0.85), transparent);
-  backdrop-filter: blur(16px);
-}
-
-.lq-nav-item {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.lq-nav-item-active {
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
-}
-
-.lq-nav-item-disabled {
-  background: rgba(15, 23, 42, 0.4);
-  opacity: 0.4;
-}
-
-.lq-nav-icon {
-  color: var(--lq-text-muted);
-}
-
-.lq-nav-icon-active {
-  color: var(--lq-accent);
-}
-
-.lq-nav-dot {
-  background: var(--lq-accent);
-}
-
-.lq-nav-center {
-  background: var(--lq-gradient-primary);
-  box-shadow: 0 18px 30px rgba(255, 107, 53, 0.3);
-}
-
-.lq-nav-center-inner {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), transparent 55%),
-    var(--lq-gradient-primary);
-}
-
-.lq-skeleton {
-  position: relative;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.lq-skeleton::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: lq-shimmer 1.5s infinite;
-  transform: translateX(-100%);
-}
-
-@keyframes lq-shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* 3D Pushable Button */
@@ -243,7 +39,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: var(--lq-radius-button);
+  border-radius: 12px;
   background: hsl(0deg 0% 0% / 0.25);
   transform: translateY(4px);
   transition: transform 250ms cubic-bezier(.3,.7,.4,1);
@@ -255,7 +51,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  border-radius: var(--lq-radius-button);
+  border-radius: 12px;
   background: linear-gradient(to left, hsl(0deg 0% 10% / 0.8) 0%, hsl(0deg 0% 20% / 0.8) 100%);
 }
 
@@ -263,13 +59,13 @@
   display: block;
   position: relative;
   padding: 16px 32px;
-  border-radius: var(--lq-radius-button);
+  border-radius: 12px;
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: white;
-  background: var(--lq-gradient-primary);
+  background: linear-gradient(to right, #FF6B35, #4ECDC4);
   transition: transform 250ms cubic-bezier(.3,.7,.4,1);
   transform: translateY(-4px);
 }
@@ -278,7 +74,7 @@
 .progress-bar-thick {
   width: 100%;
   height: 24px;
-  background: var(--lq-progress-track);
+  background: rgba(15, 23, 42, 0.5);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
@@ -287,7 +83,7 @@
 
 .progress-bar-fill {
   height: 100%;
-  background: var(--lq-progress-fill);
+  background: linear-gradient(to right, #10b981, #34d399);
   border-radius: 12px;
   position: relative;
   transition: width 0.5s cubic-bezier(.3,.7,.4,1);

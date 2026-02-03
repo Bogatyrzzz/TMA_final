@@ -29,12 +29,12 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen lq-main-screen text-white flex items-center justify-center">
+        <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
           <div className="text-center space-y-4">
             <div className="text-3xl font-bold">Ошибка загрузки</div>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 rounded-xl lq-glass-panel transition"
+              className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition"
             >
               Обновить страницу
             </button>
@@ -49,15 +49,11 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
   const [tgUser, setTgUser] = useState(null);
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
-  const [avatarFadeKey, setAvatarFadeKey] = useState(0);
-  const [avatarStartAt, setAvatarStartAt] = useState(null);
   const [initError, setInitError] = useState('');
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
@@ -78,21 +74,15 @@ function App() {
       if (!userData.age || !userData.gender) {
         setShowOnboarding(true);
         setIsGeneratingAvatar(false);
-        setAvatarStartAt(null);
-        setAvatarError(false);
       } else if (!userData.avatar_url) {
         setShowOnboarding(false);
         setIsGeneratingAvatar(true);
-        setAvatarStartAt(Date.now());
-        setAvatarError(false);
         const progressData = await api.getProgress(telegramUser.id);
         setProgress(progressData || defaultProgress);
       } else {
         const progressData = await api.getProgress(telegramUser.id);
         setProgress(progressData || defaultProgress);
         setIsGeneratingAvatar(false);
-        setAvatarStartAt(null);
-        setAvatarError(false);
       }
 
       haptic.light();
@@ -104,7 +94,6 @@ function App() {
       setShowOnboarding(false);
     } finally {
       setLoading(false);
-      setHasInitialized(true);
     }
   }, []);
 
@@ -149,10 +138,7 @@ function App() {
       setProgress(defaultProgress);
       setShowOnboarding(false);
       setIsGeneratingAvatar(false);
-      setAvatarStartAt(null);
-      setAvatarError(false);
       setLoading(false);
-      setHasInitialized(true);
     }
   }, [backendUrl, initializeUser]);
 
@@ -172,9 +158,6 @@ function App() {
           const progressData = await api.getProgress(tgUser.id);
           setProgress(progressData || defaultProgress);
           setIsGeneratingAvatar(false);
-          setAvatarStartAt(null);
-          setAvatarError(false);
-          setAvatarFadeKey((current) => current + 1);
         }
       } catch (error) {
         console.error('Error polling avatar status:', error);
@@ -186,21 +169,9 @@ function App() {
     };
   }, [tgUser, user, showOnboarding, isGeneratingAvatar]);
 
-  useEffect(() => {
-    if (!isGeneratingAvatar) {
-      setAvatarError(false);
-      return undefined;
-    }
-    const timeout = setTimeout(() => {
-      setAvatarError(true);
-    }, 90000);
-    return () => clearTimeout(timeout);
-  }, [isGeneratingAvatar, avatarStartAt]);
-
   const handleOnboardingComplete = async (onboardingData) => {
     try {
       setLoading(true);
-      localStorage.setItem('lq_onboarding_payload', JSON.stringify(onboardingData));
       
       // Complete onboarding
       await api.completeOnboarding(tgUser.id, onboardingData);
@@ -214,12 +185,8 @@ function App() {
       setShowOnboarding(false);
       if (!userData.avatar_url) {
         setIsGeneratingAvatar(true);
-        setAvatarStartAt(Date.now());
-        setAvatarError(false);
       } else {
         setIsGeneratingAvatar(false);
-        setAvatarStartAt(null);
-        setAvatarError(false);
       }
       
       haptic.success();
@@ -229,30 +196,6 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleRetryAvatar = async () => {
-    const cachedPayload = localStorage.getItem('lq_onboarding_payload');
-    setAvatarError(false);
-    setIsGeneratingAvatar(true);
-    setAvatarStartAt(Date.now());
-    if (!cachedPayload) {
-      return;
-    }
-    setLoading(true);
-    try {
-      await api.completeOnboarding(tgUser.id, JSON.parse(cachedPayload));
-    } catch (error) {
-      console.error('Error retrying avatar generation:', error);
-      setAvatarError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleContinueWithoutAvatar = () => {
-    setAvatarError(false);
-    setIsGeneratingAvatar(false);
   };
 
   const handleRefresh = async () => {
@@ -267,9 +210,9 @@ function App() {
     }
   };
 
-  if (loading && !hasInitialized) {
+  if (loading) {
     return (
-      <div className="min-h-screen lq-main-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ 
@@ -286,7 +229,7 @@ function App() {
             transition={{ repeat: Infinity, duration: 1.5 }}
             className="text-white text-2xl font-bold text-gaming"
           >
-            Запускаем LifeQuest Hero
+            ЗАГРУЗКА...
           </motion.div>
           <div className="mt-6 w-64 mx-auto progress-bar-thick">
             <motion.div
@@ -300,21 +243,17 @@ function App() {
     );
   }
 
-  if (loading && hasInitialized) {
-    return <AppSkeleton />;
-  }
-
   if (!user) {
     return (
-      <div className="min-h-screen lq-main-screen text-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-3xl font-bold">Ошибка загрузки</div>
           {initError && (
-            <div className="text-sm lq-text-muted">{initError}</div>
+            <div className="text-sm text-slate-400">{initError}</div>
           )}
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-xl lq-glass-panel transition"
+            className="px-6 py-3 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition"
           >
             Обновить страницу
           </button>
@@ -331,41 +270,9 @@ function App() {
     );
   }
 
-  if (isGeneratingAvatar && avatarError) {
-    return (
-      <div className="min-h-screen lq-main-screen flex items-center justify-center px-6">
-        <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">⚠️</div>
-          <div className="text-white text-2xl font-bold text-gaming mb-3">
-            Герой ещё не сгенерировался
-          </div>
-          <div className="lq-text-muted mb-6">
-            Проверь сеть или попробуй ещё раз. Можно продолжить без фона.
-          </div>
-          <div className="space-y-3">
-            <button
-              onClick={handleRetryAvatar}
-              className="w-full btn-pushable"
-            >
-              <span className="btn-shadow"></span>
-              <span className="btn-edge"></span>
-              <span className="btn-front">Повторить</span>
-            </button>
-            <button
-              onClick={handleContinueWithoutAvatar}
-              className="w-full px-6 py-3 rounded-xl lq-glass-panel lq-text-muted"
-            >
-              Продолжить без аватара
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (isGeneratingAvatar) {
     return (
-      <div className="min-h-screen lq-main-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ scale: [1, 1.1, 1], rotate: [0, 3, -3, 0] }}
@@ -377,7 +284,7 @@ function App() {
           <div className="text-white text-2xl font-bold text-gaming mb-3">
             Генерируем твоего героя
           </div>
-          <div className="lq-text-muted mb-6">
+          <div className="text-slate-400 mb-6">
             Осталось совсем чуть‑чуть
           </div>
           <div className="mt-2 w-72 mx-auto progress-bar-thick">
@@ -395,60 +302,8 @@ function App() {
   return (
     <div className="App">
       <ErrorBoundary>
-        <motion.div
-          key={avatarFadeKey}
-          initial={avatarFadeKey > 0 ? { opacity: 0, scale: 0.98 } : { opacity: 1, scale: 1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: 'easeOut' }}
-        >
-          <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} onProgressUpdate={setProgress} />
-        </motion.div>
+        <HomeScreen user={user} progress={progress} onRefresh={handleRefresh} onProgressUpdate={setProgress} />
       </ErrorBoundary>
-    </div>
-  );
-}
-
-function AppSkeleton() {
-  return (
-    <div className="min-h-screen lq-main-screen text-white flex flex-col">
-      <div className="flex items-center w-full px-4 lq-safe-top">
-        <div className="w-16 h-16 lq-skeleton rounded-full" />
-        <div className="flex-1 h-10 -ml-4 pl-6 pr-4 lq-glass-panel rounded-r-2xl flex items-center">
-          <div className="w-full h-2 lq-skeleton rounded-full" />
-        </div>
-      </div>
-
-      <div className="flex-1 relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 space-y-2">
-          {[0, 1, 2].map((item) => (
-            <div key={`left-${item}`} className="flex items-center space-x-2 lq-glass-chip rounded-full px-3 py-2">
-              <div className="w-6 h-6 lq-skeleton rounded-full" />
-              <div className="w-8 h-3 lq-skeleton rounded-full" />
-            </div>
-          ))}
-        </div>
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 space-y-2">
-          {[0, 1, 2].map((item) => (
-            <div key={`right-${item}`} className="flex items-center space-x-2 lq-glass-chip rounded-full px-3 py-2">
-              <div className="w-8 h-3 lq-skeleton rounded-full" />
-              <div className="w-6 h-6 lq-skeleton rounded-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-4 pb-24 pt-2 lq-safe-bottom">
-        <div className="w-full lq-glass-panel rounded-2xl p-4 space-y-3">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 lq-skeleton rounded-xl" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 lq-skeleton rounded-full w-40" />
-              <div className="h-3 lq-skeleton rounded-full w-24" />
-            </div>
-          </div>
-          <div className="h-1.5 lq-skeleton rounded-full" />
-        </div>
-      </div>
     </div>
   );
 }

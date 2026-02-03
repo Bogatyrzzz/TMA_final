@@ -13,10 +13,10 @@ export default function BottomNav({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 lq-safe-bottom">
+    <div className="fixed bottom-0 left-0 right-0 pb-safe z-50">
       <div className="relative px-6 pb-6">
         {/* Blur background */}
-        <div className="absolute inset-0 lq-nav-blur" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent backdrop-blur-xl" />
         
         {/* Navigation container */}
         <div className="relative flex items-center justify-center gap-4">
@@ -38,11 +38,11 @@ export default function BottomNav({ activeTab, onTabChange }) {
                   data-testid="nav-home"
                 >
                   {/* Glow effect */}
-                  <div className="absolute inset-0 lq-nav-center rounded-full blur-xl opacity-50" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-orange-500 to-pink-500 rounded-full blur-xl opacity-50" />
                   
                   {/* Button */}
-                  <div className="relative w-20 h-20 rounded-full lq-nav-center p-[3px]">
-                    <div className="w-full h-full rounded-full lq-nav-center-inner flex items-center justify-center">
+                  <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 p-[3px] shadow-2xl">
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-600 to-pink-600 flex items-center justify-center">
                       <Icon size={item.size} className="text-white" strokeWidth={2.5} />
                     </div>
                   </div>
@@ -73,14 +73,14 @@ export default function BottomNav({ activeTab, onTabChange }) {
               >
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
                   item.disabled 
-                    ? 'lq-nav-item-disabled' 
+                    ? 'bg-slate-800/50 opacity-40' 
                     : isActive
-                    ? 'lq-nav-item-active'
-                    : 'lq-nav-item'
+                    ? 'bg-gradient-to-br from-slate-700 to-slate-800 shadow-lg'
+                    : 'bg-slate-800/80 hover:bg-slate-700/80'
                 }`}>
                   <Icon 
                     size={item.size} 
-                    className={item.disabled ? 'lq-text-soft' : isActive ? 'lq-nav-icon-active' : 'lq-nav-icon'} 
+                    className={item.disabled ? 'text-slate-600' : isActive ? 'text-cyan-400' : 'text-slate-400'} 
                     strokeWidth={2}
                   />
                 </div>
@@ -88,7 +88,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
                 {isActive && !item.disabled && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 lq-nav-dot rounded-full shadow-lg"
+                    className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full shadow-lg"
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
