@@ -11,12 +11,12 @@ import { Slider } from './ui/slider';
 
 // Compact Stats Config - only icons
 const STATS = [
-  { key: 'strength', icon: '💪', color: 'text-red-400' },
-  { key: 'health', icon: '❤️', color: 'text-pink-400' },
-  { key: 'intellect', icon: '🧠', color: 'text-blue-400' },
-  { key: 'agility', icon: '⚡', color: 'text-yellow-400' },
-  { key: 'confidence', icon: '🔥', color: 'text-orange-400' },
-  { key: 'stability', icon: '🧘', color: 'text-cyan-400' },
+  { key: 'strength', icon: '💪', color: 'lq-stat-strength' },
+  { key: 'health', icon: '❤️', color: 'lq-stat-health' },
+  { key: 'intellect', icon: '🧠', color: 'lq-stat-intellect' },
+  { key: 'agility', icon: '⚡', color: 'lq-stat-agility' },
+  { key: 'confidence', icon: '🔥', color: 'lq-stat-confidence' },
+  { key: 'stability', icon: '🧘', color: 'lq-stat-stability' },
 ];
 
 export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate }) {
@@ -340,7 +340,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+      <div className="min-h-screen lq-main-screen text-white flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-3xl font-bold">Загрузка данных...</div>
         </div>
@@ -351,6 +351,9 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   const xpPercentage = safeProgress.next_level_xp > 0
     ? (safeProgress.current_xp / safeProgress.next_level_xp) * 100
     : 0;
+  const ringRadius = 28;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference - (xpPercentage / 100) * ringCircumference;
   const completedDaily = quests.filter(q => q.is_daily && q.is_completed).length;
   const totalDaily = quests.filter(q => q.is_daily).length;
   const activeGoals = goals.filter((goal) => !goal.is_completed);
@@ -380,7 +383,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               <div className="absolute inset-0 lq-overlay-top pointer-events-none" />
             </div>
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-indigo-950/30 to-slate-950 flex items-center justify-center">
+            <div className="absolute inset-0 lq-main-screen flex items-center justify-center">
               <span className="text-9xl opacity-30">🦸</span>
             </div>
           )}
@@ -388,69 +391,88 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
           {/* UI Content - Overlaid on background */}
           <div className="relative z-10 flex-1 flex flex-col">
             {/* RPG HUD - Level Circle + XP Bar (Seamless Organic Shape) */}
-            <div className="flex items-center w-full px-4 pt-4 absolute top-0 left-0 z-50">
+            <div className="flex items-center w-full px-4 lq-safe-top absolute top-0 left-0 z-50">
               {/* Level Circle - Left Anchor (ON TOP) */}
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                className="w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center relative z-20 shadow-[0_0_15px_rgba(139,92,246,0.6)] bg-gradient-to-br from-[#6366f1] to-[#a855f7] border-4 border-[#0F0F23]"
+                className="w-16 h-16 rounded-full flex-shrink-0 flex items-center justify-center relative z-20 lq-level-orb"
               >
+                <svg className="absolute inset-0" viewBox="0 0 64 64">
+                  <circle
+                    className="lq-ring-track"
+                    cx="32"
+                    cy="32"
+                    r={ringRadius}
+                    fill="none"
+                    strokeWidth="4"
+                  />
+                  <circle
+                    className="lq-ring-progress"
+                    cx="32"
+                    cy="32"
+                    r={ringRadius}
+                    fill="none"
+                    strokeWidth="4"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringOffset}
+                    strokeLinecap="round"
+                  />
+                </svg>
                 <span className="text-white font-black text-xl leading-none">
                   {safeProgress.current_level}
                 </span>
                 
                 {/* PRO Crown Badge */}
                 {user.is_pro && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center border-2 border-[#0F0F23] shadow-lg">
+                  <div className="absolute -top-1 -right-1 w-6 h-6 lq-pro-badge rounded-full flex items-center justify-center">
                     <Crown size={12} className="text-white" />
                   </div>
                 )}
               </motion.div>
 
-              {/* XP Bar Container - Right Extension (UNDER the circle) */}
-              <div className="flex-1 h-10 -ml-6 pl-8 pr-4 lq-glass-panel rounded-r-2xl flex flex-col justify-center relative z-10">
-                {/* Text Labels */}
+              <div className="flex-1 h-10 -ml-4 pl-6 pr-4 lq-glass-panel rounded-r-2xl flex flex-col justify-center relative z-10">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span className="text-[10px] font-bold lq-text-soft uppercase tracking-wider">XP</span>
+                  <span className="text-[10px] font-bold lq-text-soft uppercase tracking-wider">
                     {safeProgress.current_xp}/{safeProgress.next_level_xp}
                   </span>
                 </div>
-                
-                {/* XP Fill Track */}
-                <div className="w-full h-1.5 lq-progress-track rounded-full overflow-hidden mt-1">
-                  <motion.div
-                    className="h-full lq-xp-fill lq-xp-glow rounded-full relative"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${xpPercentage}%` }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                  >
-                    {/* Shimmer effect */}
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                      animate={{ x: ['-100%', '100%'] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
-                    />
-                  </motion.div>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 lq-progress-track rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full lq-xp-fill lq-xp-glow rounded-full relative"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${xpPercentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                    >
+                      <motion.div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 1 }}
+                      />
+                    </motion.div>
+                  </div>
+                  <span className="text-[10px] font-bold lq-text-soft">{Math.round(xpPercentage)}%</span>
                 </div>
               </div>
             </div>
 
             {/* Spacer for the fixed HUD */}
-            <div className="h-20" />
+            <div className="h-24" />
 
             {/* Stats - positioned on sides */}
             <div className="flex-1 relative">
               {/* Left side stats */}
-              <div className="absolute left-2 top-1/2 transform -translate-y-1/2 space-y-2">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 space-y-2">
                 {STATS.slice(0, 3).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 lq-glass-chip rounded-full px-2.5 py-1.5"
+                    className="flex items-center space-x-2 lq-glass-chip rounded-full px-3 py-2"
                   >
                     <div className="text-base">{stat.icon}</div>
                     <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
@@ -459,14 +481,14 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               </div>
 
               {/* Right side stats */}
-              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 space-y-2">
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 space-y-2">
                 {STATS.slice(3, 6).map((stat, idx) => (
                   <motion.div
                     key={stat.key}
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 lq-glass-chip rounded-full px-2.5 py-1.5"
+                    className="flex items-center space-x-2 lq-glass-chip rounded-full px-3 py-2"
                   >
                     <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
                     <div className="text-base">{stat.icon}</div>
@@ -476,34 +498,34 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
             </div>
 
             {/* Daily Quests Progress Button - Always visible at bottom */}
-            <div className="px-4 pb-24 pt-2">
+            <div className="px-4 pb-24 pt-2 lq-safe-bottom">
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   haptic.medium();
                   setActiveTab('quests');
                 }}
-                className="w-full lq-glass-panel rounded-2xl p-3"
+                className="w-full lq-glass-panel rounded-2xl p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 lq-quest-icon rounded-xl flex items-center justify-center">
                       <Star size={20} className="text-white" />
                     </div>
                     <div className="text-left">
                       <div className="font-bold text-base drop-shadow-lg">Ежедневные квесты</div>
-                      <div className="text-xs text-white/70">
+                      <div className="text-xs lq-text-muted">
                         {completedDaily} / {totalDaily} выполнено
                       </div>
                     </div>
                   </div>
-                  <ChevronRight size={20} className="text-white/70" />
+                  <ChevronRight size={20} className="lq-text-muted" />
                 </div>
                 
                 {/* Progress bar */}
-                <div className="mt-2 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                <div className="mt-3 h-1.5 lq-progress-track rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                    className="h-full lq-xp-fill"
                     initial={{ width: 0 }}
                     animate={{ width: totalDaily > 0 ? `${(completedDaily / totalDaily) * 100}%` : '0%' }}
                     transition={{ duration: 0.5 }}
