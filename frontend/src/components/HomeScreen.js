@@ -360,7 +360,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   const canSaveGoal = !savingGoal && goalText.trim().length >= 3 && goalLevel >= 1 && goalLevel <= 50;
 
   return (
-    <div className="h-screen bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950 text-white flex flex-col">
+    <div className="h-screen lq-main-screen text-white flex flex-col">
       {/* Home Tab - Avatar as Background */}
       {activeTab === 'home' && (
         <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -376,8 +376,8 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
                 decoding="async"
               />
               {/* Gradient overlays for UI readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-slate-950/60 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 lq-overlay-bottom pointer-events-none" />
+              <div className="absolute inset-0 lq-overlay-top pointer-events-none" />
             </div>
           ) : (
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-indigo-950/30 to-slate-950 flex items-center justify-center">
@@ -409,7 +409,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               </motion.div>
 
               {/* XP Bar Container - Right Extension (UNDER the circle) */}
-              <div className="flex-1 h-10 -ml-6 pl-8 pr-4 bg-slate-900/90 backdrop-blur-md rounded-r-2xl border border-white/10 flex flex-col justify-center relative z-10">
+              <div className="flex-1 h-10 -ml-6 pl-8 pr-4 lq-glass-panel rounded-r-2xl flex flex-col justify-center relative z-10">
                 {/* Text Labels */}
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
@@ -419,9 +419,9 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
                 </div>
                 
                 {/* XP Fill Track */}
-                <div className="w-full h-1.5 bg-slate-700/50 rounded-full overflow-hidden mt-1">
+                <div className="w-full h-1.5 lq-progress-track rounded-full overflow-hidden mt-1">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_10px_rgba(34,211,238,0.5)] rounded-full relative"
+                    className="h-full lq-xp-fill lq-xp-glow rounded-full relative"
                     initial={{ width: 0 }}
                     animate={{ width: `${xpPercentage}%` }}
                     transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
@@ -450,7 +450,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
+                    className="flex items-center space-x-1 lq-glass-chip rounded-full px-2.5 py-1.5"
                   >
                     <div className="text-base">{stat.icon}</div>
                     <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
@@ -466,7 +466,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
                     initial={{ x: 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="flex items-center space-x-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1.5 border border-white/20"
+                    className="flex items-center space-x-1 lq-glass-chip rounded-full px-2.5 py-1.5"
                   >
                     <div className={`text-sm font-bold ${stat.color} drop-shadow-lg`}>{user[stat.key] || 1}</div>
                     <div className="text-base">{stat.icon}</div>
@@ -483,7 +483,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
                   haptic.medium();
                   setActiveTab('quests');
                 }}
-                className="w-full bg-black/40 backdrop-blur-md rounded-xl p-3 border border-white/20 shadow-lg"
+                className="w-full lq-glass-panel rounded-2xl p-3"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">

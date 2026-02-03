@@ -212,7 +212,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen lq-main-screen flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ 
@@ -272,7 +272,7 @@ function App() {
 
   if (isGeneratingAvatar) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen lq-main-screen flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ scale: [1, 1.1, 1], rotate: [0, 3, -3, 0] }}
@@ -284,7 +284,7 @@ function App() {
           <div className="text-white text-2xl font-bold text-gaming mb-3">
             Генерируем твоего героя
           </div>
-          <div className="text-slate-400 mb-6">
+          <div className="lq-text-muted mb-6">
             Осталось совсем чуть‑чуть
           </div>
           <div className="mt-2 w-72 mx-auto progress-bar-thick">
