@@ -39,74 +39,48 @@ export default function BottomNav({ activeTab, onTabChange }) {
             zIndex: 2,
           }}
         />
-        <div className="flex items-center gap-6 relative z-10">
-          {navItems.slice(0, 2).map((item) => {
-            const Icon = item.icon;
+        <div className="relative z-10 grid w-full grid-cols-5 items-end justify-items-center gap-6">
+          {navItems.map((item) => {
             const isActive = activeTab === item.id;
-            return (
-              <motion.button
-                key={item.id}
-                onClick={() => {
-                  if (item.disabled) return;
-                  haptic.light();
-                  onTabChange(item.id);
-                }}
-                className="flex flex-col items-center justify-center gap-1 w-10 relative z-10"
-                whileTap={!item.disabled ? { scale: 0.9 } : {}}
-                data-testid={`nav-${item.id}`}
-              >
-                <Icon
-                  size={item.size}
-                  className={item.disabled ? 'text-slate-600' : isActive ? 'text-[#FF6A2A]' : 'text-white/70'}
-                  strokeWidth={2}
-                />
-                <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? 'text-white' : 'text-white/50'}`}>
-                  {item.label}
-                </span>
-              </motion.button>
-            );
-          })}
-        </div>
-
-        <div className="relative -top-5 z-10">
-          <motion.button
-            initial={false}
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.03 }}
-            animate={activeTab === 'home' ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-            transition={{ duration: 1.6, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
-            onClick={() => {
-              haptic.medium();
-              onTabChange('home');
-            }}
-            className="w-[72px] h-[72px] bg-gradient-to-b from-[#FF6A2A] to-orange-700 rounded-full flex items-center justify-center shadow-[0_10px_26px_rgba(255,106,42,0.55)] lq-nav-clip transform transition-transform active:scale-95"
-            data-testid="nav-home"
-          >
-            <Home size={28} className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              animate={activeTab === 'home' ? { boxShadow: ['0 0 26px rgba(255,106,42,0.35)', '0 0 40px rgba(255,106,42,0.55)', '0 0 26px rgba(255,106,42,0.35)'] } : { boxShadow: '0 0 26px rgba(255,106,42,0.3)' }}
-              transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
-            />
-            <motion.div
-              className="absolute -inset-3 rounded-full border border-[#FF6A2A]/45 blur-lg opacity-70"
-              animate={activeTab === 'home' ? { opacity: [0.45, 0.8, 0.45] } : { opacity: 0.6 }}
-              transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              animate={{ opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 2.4, ease: 'easeInOut', repeat: Infinity }}
-              style={{ background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.35), rgba(255,255,255,0))' }}
-            />
-            <div className="absolute top-2 w-10 h-5 bg-white/15 rounded-full blur-md" />
-          </motion.button>
-        </div>
-
-        <div className="flex items-center gap-6 relative z-10">
-          {navItems.slice(3).map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isPrimary = item.id === 'quests' || item.id === 'goals';
+            if (item.id === 'home') {
+              return (
+                <div key={item.id} className="relative -top-5">
+                  <motion.button
+                    initial={false}
+                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.03 }}
+                    animate={activeTab === 'home' ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+                    transition={{ duration: 1.6, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+                    onClick={() => {
+                      haptic.medium();
+                      onTabChange('home');
+                    }}
+                    className="w-[72px] h-[72px] bg-gradient-to-b from-[#FF6A2A] to-orange-700 rounded-full flex items-center justify-center shadow-[0_10px_26px_rgba(255,106,42,0.55)] lq-nav-clip transform transition-transform active:scale-95"
+                    data-testid="nav-home"
+                  >
+                    <Home size={28} className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.5)]" strokeWidth={2.5} />
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={activeTab === 'home' ? { boxShadow: ['0 0 26px rgba(255,106,42,0.35)', '0 0 40px rgba(255,106,42,0.55)', '0 0 26px rgba(255,106,42,0.35)'] } : { boxShadow: '0 0 26px rgba(255,106,42,0.3)' }}
+                      transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+                    />
+                    <motion.div
+                      className="absolute -inset-3 rounded-full border border-[#FF6A2A]/45 blur-lg opacity-70"
+                      animate={activeTab === 'home' ? { opacity: [0.45, 0.8, 0.45] } : { opacity: 0.6 }}
+                      transition={{ duration: 1.8, ease: 'easeInOut', repeat: activeTab === 'home' ? Infinity : 0 }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      animate={{ opacity: [0.2, 0.4, 0.2] }}
+                      transition={{ duration: 2.4, ease: 'easeInOut', repeat: Infinity }}
+                      style={{ background: 'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.35), rgba(255,255,255,0))' }}
+                    />
+                    <div className="absolute top-2 w-10 h-5 bg-white/15 rounded-full blur-md" />
+                  </motion.button>
+                </div>
+              );
+            }
             if (item.id === 'sage') {
               return (
                 <button
@@ -129,6 +103,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
                 </button>
               );
             }
+            const Icon = item.icon;
             return (
               <motion.button
                 key={item.id}
@@ -143,7 +118,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
               >
                 <Icon
                   size={item.size}
-                  className={item.disabled ? 'text-slate-600' : isActive ? 'text-[#33D6C7]' : 'text-white/70'}
+                  className={item.disabled ? 'text-slate-600' : isActive ? (isPrimary ? 'text-[#FF6A2A]' : 'text-[#33D6C7]') : 'text-white/70'}
                   strokeWidth={2}
                 />
                 <span className={`text-[9px] font-bold uppercase tracking-tight ${isActive ? 'text-white' : 'text-white/50'}`}>

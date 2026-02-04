@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Star, Crown, CheckCircle2, Circle, Trophy, Gift, Sparkles, Target } from 'lucide-react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Dumbbell01Icon, HealthIcon, BrainIcon } from '@hugeicons/core-free-icons';
+import { Dumbbell01Icon, HealthIcon, BrainIcon, ZapIcon } from '@hugeicons/core-free-icons';
 import { haptic } from '../lib/telegram';
 import { api } from '../lib/api';
 import BottomNav from './BottomNav';
@@ -27,6 +27,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
   const [quests, setQuests] = useState([]);
   const [showProModal, setShowProModal] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
+  const [questFilter, setQuestFilter] = useState('daily');
   const [showMenu, setShowMenu] = useState(false);
   const [confirmQuest, setConfirmQuest] = useState(null);
   const [levelUpData, setLevelUpData] = useState(null);
@@ -539,22 +540,84 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
               </div>
             </div>
 
-            <div className="space-y-3">
-              {quests.map((quest, index) => (
-                <QuestCard
-                  key={quest.id}
-                  quest={quest}
-                  index={index}
-                  onComplete={() => {
-                    if (!quest.is_completed) {
-                      haptic.light();
-                      setConfirmQuest(quest);
-                    }
-                  }}
-                  disabled={processingQuestId === quest.id || quest.is_completed}
-                />
-              ))}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setQuestFilter('daily')}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide border transition ${
+                  questFilter === 'daily'
+                    ? 'bg-[#FF6A2A]/20 border-[#FF6A2A]/40 text-[#FF6A2A]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                }`}
+              >
+                Дэйлик
+              </button>
+              <button
+                onClick={() => setQuestFilter('ultra')}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide border transition ${
+                  questFilter === 'ultra'
+                    ? 'bg-[#33D6C7]/20 border-[#33D6C7]/40 text-[#33D6C7]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                }`}
+              >
+                Ультра
+              </button>
             </div>
+
+            <div className="space-y-3">
+              {quests
+                .filter((quest) => {
+                  const isUltra = quest.branch === 'global';
+                  const isDaily = typeof quest.is_daily === 'boolean' ? quest.is_daily : !isUltra;
+                  if (quest.is_completed) return false;
+                  return questFilter === 'daily' ? isDaily : isUltra;
+                })
+                .map((quest, index) => (
+                  <QuestCard
+                    key={quest.id}
+                    quest={quest}
+                    index={index}
+                    onComplete={() => {
+                      if (!quest.is_completed) {
+                        haptic.light();
+                        setConfirmQuest(quest);
+                      }
+                    }}
+                    disabled={processingQuestId === quest.id || quest.is_completed}
+                  />
+                ))}
+            </div>
+
+            {quests.some((quest) => quest.is_completed && (questFilter === 'daily'
+              ? (typeof quest.is_daily === 'boolean' ? quest.is_daily : quest.branch !== 'global')
+              : quest.branch === 'global')) && (
+              <div className="pt-2 space-y-3">
+                <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.3em] text-white/50 px-1">
+                  <span>Сделано</span>
+                  <span>
+                    {quests.filter((quest) => {
+                      const isUltra = quest.branch === 'global';
+                      const isDaily = typeof quest.is_daily === 'boolean' ? quest.is_daily : !isUltra;
+                      return quest.is_completed && (questFilter === 'daily' ? isDaily : isUltra);
+                    }).length}
+                  </span>
+                </div>
+                {quests
+                  .filter((quest) => {
+                    const isUltra = quest.branch === 'global';
+                    const isDaily = typeof quest.is_daily === 'boolean' ? quest.is_daily : !isUltra;
+                    return quest.is_completed && (questFilter === 'daily' ? isDaily : isUltra);
+                  })
+                  .map((quest, index) => (
+                    <QuestCard
+                      key={`completed-${quest.id}`}
+                      quest={quest}
+                      index={index}
+                      onComplete={() => {}}
+                      disabled
+                    />
+                  ))}
+              </div>
+            )}
           </div>
         </motion.div>
       )}
@@ -961,6 +1024,19 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
 
 // Quest Card Component - Detached style
 function QuestCard({ quest, index, onComplete, disabled }) {
+  const title = quest.title || 'Квест';
+  const description = quest.description || '';
+  const reward = quest.xp_reward || 0;
+  const branchKey = quest.branch && quest.branch !== 'global' ? quest.branch.toLowerCase() : 'daily';
+  const branchLabel = branchKey === 'power' ? 'POWER' : branchKey === 'daily' ? 'DAILY' : branchKey.toUpperCase();
+  const branchStyle = branchKey === 'power'
+    ? 'bg-orange-500/15 border-orange-400/30 text-orange-300'
+    : branchKey === 'daily'
+      ? 'bg-cyan-500/15 border-cyan-400/30 text-cyan-300'
+      : 'bg-purple-500/15 border-purple-400/30 text-purple-300';
+  const isCompleted = quest.is_completed;
+  const cleanTitle = title.replace(/[\p{Extended_Pictographic}\uFE0F]/gu, '').replace(/\s+/g, ' ').trim() || 'Квест';
+
   return (
     <motion.button
       initial={{ opacity: 0 }}
@@ -970,42 +1046,50 @@ function QuestCard({ quest, index, onComplete, disabled }) {
       whileTap={!disabled ? { scale: 0.98 } : {}}
       onClick={!disabled ? onComplete : undefined}
       disabled={disabled}
-      className={`w-full text-left rounded-2xl p-5 border transition-all ${
-        quest.is_completed
-          ? 'bg-green-500/10 border-green-500/50'
-          : 'bg-slate-800/50 border-slate-700 hover:border-cyan-500/50 hover:bg-slate-700/50'
+      className={`w-full text-left rounded-2xl p-4 border transition-all relative overflow-hidden h-24 ${
+        isCompleted
+          ? 'bg-emerald-500/10 border-emerald-500/40'
+          : 'bg-slate-900/60 border-[#33D6C7]/15 hover:border-[#33D6C7]/35 hover:bg-slate-900/70'
       }`}
       data-testid={`quest-${quest.id}`}
     >
-      <div className="flex items-start space-x-4">
-        <div className="text-3xl">{quest.title.split(' ')[0]}</div>
-        
-        <div className="flex-1">
-          <h4 className={`font-bold text-lg mb-1 ${
-            quest.is_completed ? 'line-through text-slate-500' : 'text-white'
-          }`}>
-            {quest.title}
-          </h4>
-          {quest.description && (
-            <p className="text-sm text-slate-400 mb-3">{quest.description}</p>
-          )}
-          
-          <div className="flex items-center gap-2">
-            <div className="bg-cyan-500/20 rounded-full px-3 py-1 flex items-center space-x-1 border border-cyan-500/30">
-              <Zap size={14} className="text-cyan-400" />
-              <span className="text-xs font-bold text-cyan-400">+{quest.xp_reward}</span>
-            </div>
-            {quest.branch !== 'global' && (
-              <div className="bg-slate-700/50 rounded-full px-3 py-1 border border-slate-600">
-                <span className="text-xs text-slate-400 uppercase font-medium">{quest.branch}</span>
-              </div>
-            )}
-          </div>
+      <div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[#33D6C7]/10 blur-3xl" />
+      <div className="absolute top-3 right-3 flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-white/80">
+        <HugeiconsIcon icon={ZapIcon} size={12} color="currentColor" strokeWidth={2} />
+        <span>+{reward}</span>
+      </div>
+      <div className="flex items-center gap-4 h-full">
+        <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6A2A]/15 via-[#33D6C7]/10 to-[#33D6C7]/20 border border-white/10 shadow-[0_0_16px_rgba(51,214,199,0.2)] flex items-center justify-center text-slate-300 text-xs font-bold shrink-0">
+          IMAGE
         </div>
 
-        {quest.is_completed && (
-          <div className="text-2xl">✅</div>
-        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full border ${branchStyle}`}>
+              {branchLabel}
+            </span>
+          </div>
+          <h4 className={`font-bold text-base truncate ${
+            isCompleted ? 'line-through text-slate-500' : 'text-white'
+          }`}>
+            {cleanTitle}
+          </h4>
+          <p className="text-xs text-slate-400 mt-1 truncate">
+            {description || ' '}
+          </p>
+        </div>
+
+        <div className="flex h-full flex-col items-end justify-end">
+          {isCompleted ? (
+            <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+            </div>
+          ) : (
+            <div className="min-w-[64px] px-3 py-1.5 rounded-full bg-gradient-to-r from-[#FF6A2A] to-orange-600 text-white text-[11px] font-bold shadow-[0_6px_14px_rgba(255,106,42,0.28)] text-center">
+              Старт
+            </div>
+          )}
+        </div>
       </div>
     </motion.button>
   );
