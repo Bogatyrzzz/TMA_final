@@ -169,6 +169,7 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
     if (onProgressUpdate) {
       onProgressUpdate(optimisticProgress);
     }
+    setConfirmQuest(null);
 
     try {
       const result = await api.completeQuest(user.tg_id, questId);
@@ -194,7 +195,6 @@ export default function HomeScreen({ user, progress, onRefresh, onProgressUpdate
       }
 
       onRefresh();
-      setConfirmQuest(null);
     } catch (error) {
       setQuests(previousQuests);
       if (onProgressUpdate) {
